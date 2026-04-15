@@ -41,6 +41,12 @@ def analyze_with_gemini(api_keys, data):
     - Resistance 1: {data.get('resistance_1')} | Resistance 2: {data.get('resistance_2')}
     - Bollinger Bands: Upper {data.get('bb_upper')} | Lower {data.get('bb_lower')}
     - MACD Line: {data.get('macd')}
+    - Fibonacci Levels: 23.6%: {data.get('fib_236')} | 38.2%: {data.get('fib_382')} | 50%: {data.get('fib_500')} | 61.8%: {data.get('fib_618')} | 78.6%: {data.get('fib_786')}
+    
+    Data Fundamental & Statistik:
+    - Tertinggi 52 Minggu: {data.get('stats', {}).get('high_52')}
+    - Terendah 52 Minggu: {data.get('stats', {}).get('low_52')}
+    - Market Cap: {data.get('stats', {}).get('market_cap')}
     
     Data Historis Close (90 hari): {json.dumps(data.get('history', [])[-30:])} (ditampilkan 30 hari terakhir)
     
@@ -50,11 +56,10 @@ def analyze_with_gemini(api_keys, data):
     {json.dumps(data.get('news', []), indent=2, ensure_ascii=False)}
     
     Tugas Anda:
-    1. Lakukan Analisis Teknikal Mendalam: Identifikasi pola harga, breakout, serta kekuatan support/resistance yang ada.
-    2. Gabungkan dengan analisis sentimen dari berita terbaru.
-    3. Berikan rekomendasi (BUY / HOLD / SELL).
-    4. Berikan alasan yang sangat spesifik berdasarkan angka-angka indikator di atas.
-    5. Berikan angka presisi untuk: Harga Beli (Entry), Target Penjualan (TP), dan Cut Loss (CL).
+    1. Lakukan Analisis Teknikal & Fundamental Mendalam: Gunakan level Fibonacci dan statistik 52 minggu di atas untuk menentukan area beli/jual yang logis.
+    2. Identifikasi pola chart (misal: Double Bottom, Breakout, Sideways) dari data historis.
+    3. Anda SEKARANG MEMILIKI data matematis yang cukup. JANGAN katakan Anda tidak bisa melakukan analisis teknikal atau menghitung target harga.
+    4. Berikan angka presisi untuk: Harga Beli (Entry), Target Penjualan (TP), dan Cut Loss (CL).
     
     PENTING: Format output Anda WAJIB berupa JSON murni dengan struktur berikut:
     {{

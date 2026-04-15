@@ -261,6 +261,11 @@
                     <div class="data-row"><span class="data-label">BB Upper:</span><span class="data-value" id="resBBU"></span></div>
                     <div class="data-row"><span class="data-label">BB Lower:</span><span class="data-value" id="resBBL"></span></div>
                     <div class="data-row"><span class="data-label">MACD:</span><span class="data-value" id="resMACD"></span></div>
+                    <div style="margin: 8px 0; border-top: 1px solid var(--border-color); opacity: 0.5;"></div>
+                    <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">FIBONACCI (90D)</div>
+                    <div class="data-row"><span class="data-label">Fib 61.8%:</span><span class="data-value" id="resFib618"></span></div>
+                    <div class="data-row"><span class="data-label">Fib 50.0%:</span><span class="data-value" id="resFib500"></span></div>
+                    <div class="data-row"><span class="data-label">Fib 38.2%:</span><span class="data-value" id="resFib382"></span></div>
                 </div>
             </div>
 
@@ -458,15 +463,18 @@
             document.getElementById('resBBU').textContent = formatNum(resData.bb_upper);
             document.getElementById('resBBL').textContent = formatNum(resData.bb_lower);
             document.getElementById('resMACD').textContent = formatNum(resData.macd);
+            document.getElementById('resFib618').textContent = formatNum(resData.fib_618);
+            document.getElementById('resFib500').textContent = formatNum(resData.fib_500);
+            document.getElementById('resFib382').textContent = formatNum(resData.fib_382);
 
             const signalBadge = document.getElementById('resSignal');
             signalBadge.textContent = aiRes.signal;
             signalBadge.className = 'signal-badge ' + (aiRes.signal.toUpperCase() === 'BUY' ? 'signal-buy' : (aiRes.signal.toUpperCase() === 'SELL' ? 'signal-sell' : 'signal-hold'));
 
-            const formatNum = (val) => (val === null || val === undefined || isNaN(parseFloat(val))) ? '-' : parseFloat(val).toLocaleString('id-ID');
-            document.getElementById('resEntry').textContent = formatNum(aiRes.entry_price);
-            document.getElementById('resTarget').textContent = formatNum(aiRes.target_price);
-            document.getElementById('resCutloss').textContent = formatNum(aiRes.cut_loss_price);
+            const fn = (val) => (val === null || val === undefined || isNaN(parseFloat(val))) ? '-' : parseFloat(val).toLocaleString('id-ID');
+            document.getElementById('resEntry').textContent = fn(aiRes.entry_price);
+            document.getElementById('resTarget').textContent = fn(aiRes.target_price);
+            document.getElementById('resCutloss').textContent = fn(aiRes.cut_loss_price);
             
             document.getElementById('resAnalysis').textContent = aiRes.analysis;
             document.getElementById('resReason').innerHTML = `<b>Alasan AI:</b> ${aiRes.reason}`;
@@ -591,7 +599,6 @@
                         list.appendChild(li);
                     });
                 }
-            // Add a small notification in both chat boxes
             const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
             const updateMsg = document.createElement('div');
             updateMsg.className = 'message bot-message';

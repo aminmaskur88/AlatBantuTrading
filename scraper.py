@@ -162,6 +162,15 @@ def scrape_stock_data(symbol, driver_not_used=None, is_indo=False):
                 if current_price is None:
                     continue
 
+                # Ambil data tambahan statistik untuk AI
+                stats = {
+                    "high_52": meta.get('fiftyTwoWeekHigh'),
+                    "low_52": meta.get('fiftyTwoWeekLow'),
+                    "prev_close": meta.get('previousClose'),
+                    "market_cap": meta.get('marketCap'),
+                    "currency": meta.get('currency')
+                }
+
                 # Extract history for technical analysis
                 adj_close = []
                 if 'indicators' in result and 'adjclose' in result['indicators']:
@@ -189,7 +198,8 @@ def scrape_stock_data(symbol, driver_not_used=None, is_indo=False):
                     "change": str(round(calc_change, 2)), 
                     "currency": currency,
                     "source": "Yahoo Finance API", 
-                    "history": adj_close
+                    "history": adj_close,
+                    "stats": stats
                 }
         except Exception as e:
             logging.warning(f"Error scraping {current_symbol}: {e}")

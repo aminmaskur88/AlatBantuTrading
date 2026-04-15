@@ -84,8 +84,10 @@ def run_full_analysis(symbol):
             f"Konteks Analisis: {profile_info}\n"
             f"Data Pasar Saat Ini: Harga {enriched.get('price')} ({enriched.get('change')}%). Tren {enriched.get('market_trend')}, Sentimen {enriched.get('sentiment')}.\n"
             f"Indikator Teknikal: Support1: {enriched.get('support_1')}, Resistance1: {enriched.get('resistance_1')}, BB Upper: {enriched.get('bb_upper')}, BB Lower: {enriched.get('bb_lower')}, MACD: {enriched.get('macd')}.\n"
+            f"Fibonacci (90D): 61.8%: {enriched.get('fib_618')}, 50%: {enriched.get('fib_500')}, 38.2%: {enriched.get('fib_382')}.\n"
+            f"Fundamental/Stats: High 52W: {enriched.get('stats', {}).get('high_52')}, Low 52W: {enriched.get('stats', {}).get('low_52')}, Cap: {enriched.get('stats', {}).get('market_cap')}.\n"
             f"Berita Terbaru: {json.dumps(enriched.get('news', []))}.\n"
-            "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal di atas jika user bertanya tentang support, resistance, atau indikator teknis lainnya."
+            "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal dan fundamental presisi di atas. JANGAN katakan kamu tidak bisa menghitung target harga."
         )
         chat_sessions[symbol] = [
             {"role": "user", "parts": [{"text": initial_context}]},
@@ -219,7 +221,9 @@ def sync_chat():
         f"Konteks Analisis: {profile_info}\n"
         f"Data Pasar Saat Ini: Harga {enriched.get('price')} ({enriched.get('change')}%). Tren {enriched.get('market_trend')}, Sentimen {enriched.get('sentiment')}.\n"
         f"Indikator Teknikal: Support1: {enriched.get('support_1')}, Resistance1: {enriched.get('resistance_1')}, BB Upper: {enriched.get('bb_upper')}, BB Lower: {enriched.get('bb_lower')}, MACD: {enriched.get('macd')}.\n"
-        "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal di atas jika user bertanya tentang teknikal."
+        f"Fibonacci (90D): 61.8%: {enriched.get('fib_618')}, 50%: {enriched.get('fib_500')}, 38.2%: {enriched.get('fib_382')}.\n"
+        f"Fundamental/Stats: High 52W: {enriched.get('stats', {}).get('high_52')}, Low 52W: {enriched.get('stats', {}).get('low_52')}, Cap: {enriched.get('stats', {}).get('market_cap')}.\n"
+        "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal dan fundamental presisi di atas."
     )
     chat_sessions[symbol] = [
         {"role": "user", "parts": [{"text": initial_context}]},

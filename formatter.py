@@ -80,7 +80,19 @@ def calculate_technical_indicators(prices):
     ema26 = sum(prices[-26:]) / 26 # Approximation
     macd_line = ema12 - ema26
     
-    return {
+    # 4. Fibonacci Levels (90 days range)
+    high_90 = max(prices)
+    low_90 = min(prices)
+    diff = high_90 - low_90
+    fib = {
+        "fib_236": high_90 - (0.236 * diff),
+        "fib_382": high_90 - (0.382 * diff),
+        "fib_500": high_90 - (0.500 * diff),
+        "fib_618": high_90 - (0.618 * diff),
+        "fib_786": high_90 - (0.786 * diff)
+    }
+    
+    results = {
         "support_1": round(s1, 2),
         "resistance_1": round(r1, 2),
         "support_2": round(s2, 2),
@@ -89,6 +101,11 @@ def calculate_technical_indicators(prices):
         "bb_lower": round(lower_band, 2),
         "macd": round(macd_line, 2)
     }
+    # Round fib levels
+    for k, v in fib.items():
+        results[k] = round(v, 2)
+        
+    return results
 
 def clean_data(raw_data):
     clean = raw_data.copy()
