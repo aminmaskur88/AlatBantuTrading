@@ -154,11 +154,12 @@ def chat():
         processed_message = message
         try:
             import re
-            urls = re.findall(r'(https?://[^\s]+)', message)
+            # Regex yang lebih inklusif untuk mendeteksi URL (termasuk yang diawali www.)
+            urls = re.findall(r'((?:https?://|www\.)[^\s]+)', message)
             
             # If a URL is detected, use a full browser to scrape it
             if urls:
-                yield f"data: {json.dumps({'status': 'Sistem: URL terdeteksi. Membuka Chromium...'})}\n\n"
+                yield f"data: {json.dumps({'status': 'Sistem: URL terdeteksi. Membuka browser untuk membaca konten...'})}\n\n"
                 extracted_contents = []
                 driver = None
                 try:
@@ -167,9 +168,10 @@ def chat():
                     import time
                     driver = get_driver()
                     for url in urls:
+                        full_url = url if url.startswith('http') else f'http://{url}'
                         yield f"data: {json.dumps({'status': f'Sistem: Membaca konten dari {url}...'})}\n\n"
                         try:
-                            driver.get(url)
+                            driver.get(full_url)
                             time.sleep(3) 
                             page_source = driver.page_source
                             soup = BeautifulSoup(page_source, 'html.parser')
