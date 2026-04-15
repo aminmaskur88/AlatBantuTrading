@@ -128,63 +128,74 @@ def scrape_stock_data(symbol, driver_not_used=None, is_indo=False):
             "currency": "USD", "source": "CoinGecko API", "history": history
         }
     
-    try:
-        yf_symbol = symbol
-        currency = "USD"
-        if is_indo:
-            currency = "IDR"
-            if not yf_symbol.endswith(".JK"):
-                yf_symbol = f"{symbol}.JK"
+    original_symbol_upper = symbol.upper()
+    symbols_to_try = [original_symbol_upper]
+    
+    # Heuristik untuk saham Indonesia
+    if is_indo:
+        if not original_symbol_upper.endswith(".JK"):
+            symbols_to_try.insert(0, f"{original_symbol_upper}.JK")
+    elif len(original_symbol_upper) == 4 and original_symbol_upper.isalpha() and '.' not in original_symbol_upper:
+        # Jika global tapi 4 huruf, coba .JK juga sebagai cadangan
+        symbols_to_try.append(f"{original_symbol_upper}.JK")
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    
+    for current_symbol in symbols_to_try:
+        try:
+            url = f"https://query1.finance.yahoo.com/v8/finance/chart/{current_symbol}?interval=1d&range=30d"
+            response = requests.get(url, headers=headers, timeout=10)
             
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{yf_symbol}?interval=1d&range=30d"
-        res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'}, timeout=10).json()
-        
-        if 'chart' in res and res['chart']['result']:
-            result = res['chart']['result'][0]
-            meta = result['meta']
-            current_price = meta.get('regularMarketPrice')
-            
-            # Extract history for technical analysis
-            adj_close = []
-            if 'indicators' in result and 'adjclose' in result['indicators']:
-                adj_close = [p for p in result['indicators']['adjclose'][0].get('adjclose', []) if p is not None]
-            elif 'indicators' in result and 'quote' in result['indicators']:
-                adj_close = [p for p in result['indicators']['quote'][0].get('close', []) if p is not None]
+            if response.status_code == 404:
+                continue
                 
-            currency = meta.get('currency', currency)
+            res = response.json()
             
-            # Prioritaskan daily previous close dari history jika tersedia
-            # (History[-1] adalah harga saat ini, history[-2] adalah penutupan sebelumnya)
-            prev_close = None
-            if len(adj_close) >= 2:
-                prev_close = adj_close[-2]
-            
-            if not prev_close:
-                prev_close = meta.get('regularMarketPreviousClose')
-            if not prev_close:
-                prev_close = meta.get('previousClose')
-            if not prev_close:
-                prev_close = meta.get('chartPreviousClose')
-            
-            calc_change = 0
-            if current_price and prev_close:
-                calc_change = ((current_price - prev_close) / prev_close) * 100
+            if 'chart' in res and res['chart']['result']:
+                result = res['chart']['result'][0]
+                meta = result['meta']
+                current_price = meta.get('regularMarketPrice')
                 
-            return {
-                "symbol": symbol, 
-                "price": str(current_price),
-                "change": str(round(calc_change, 2)), 
-                "currency": currency,
-                "source": "Yahoo Finance API", 
-                "history": adj_close
-            }
-        else:
-            logging.warning(f"Yahoo Finance returned empty result for {yf_symbol}")
-            return {"symbol": symbol, "price": "0", "change": "0", "currency": currency, "history": []}
-            
-    except Exception as e:
-        logging.error(f"Yahoo Finance Error for {symbol}: {e}")
-        return {"symbol": symbol, "price": "0", "change": "0", "currency": currency, "history": []}
+                if current_price is None:
+                    continue
+
+                # Extract history for technical analysis
+                adj_close = []
+                if 'indicators' in result and 'adjclose' in result['indicators']:
+                    adj_close = [p for p in result['indicators']['adjclose'][0].get('adjclose', []) if p is not None]
+                elif 'indicators' in result and 'quote' in result['indicators']:
+                    adj_close = [p for p in result['indicators']['quote'][0].get('close', []) if p is not None]
+                    
+                currency = meta.get('currency', 'IDR' if is_indo else 'USD')
+                
+                # Prioritaskan daily previous close dari history jika tersedia
+                prev_close = None
+                if len(adj_close) >= 2:
+                    prev_close = adj_close[-2]
+                
+                if not prev_close:
+                    prev_close = meta.get('regularMarketPreviousClose') or meta.get('previousClose') or meta.get('chartPreviousClose')
+                
+                calc_change = 0
+                if current_price and prev_close:
+                    calc_change = ((current_price - prev_close) / prev_close) * 100
+                    
+                return {
+                    "symbol": symbol, 
+                    "price": str(current_price),
+                    "change": str(round(calc_change, 2)), 
+                    "currency": currency,
+                    "source": "Yahoo Finance API", 
+                    "history": adj_close
+                }
+        except Exception as e:
+            logging.warning(f"Error scraping {current_symbol}: {e}")
+            continue
+
+    # Jika semua percobaan gagal
+    return {"symbol": symbol, "price": "0", "change": "0", "currency": "IDR" if is_indo else "USD", "history": []}
 
 def get_driver():
     """Inisialisasi Selenium WebDriver dengan opsi Termux (Optimasi Stabilitas)."""
@@ -201,13 +212,18 @@ def get_driver():
     options.add_argument("--disable-software-rasterizer")
     options.add_argument("--disable-features=VizDisplayCompositor")
     options.add_argument("--remote-debugging-port=9222")
-    options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+    options.add_argument("--blink-settings=imagesEnabled=false") # Jangan load gambar (Hemat RAM/Waktu)
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
+    
+    # Eager strategy: Jangan tunggu gambar/css penuh, cukup DOM siap langsung eksekusi
+    options.page_load_strategy = 'eager'
     
     try:
         chromedriver_path = "/data/data/com.termux/files/usr/bin/chromedriver"
         service = Service(executable_path=chromedriver_path)
         driver = webdriver.Chrome(service=service, options=options)
-        driver.set_page_load_timeout(20)
+        driver.set_page_load_timeout(30) # Naikkan ke 30 detik untuk Termux
         logging.info("Selenium WebDriver berhasil diinisialisasi.")
         return ScraperDriver(driver)
     except Exception as e:
