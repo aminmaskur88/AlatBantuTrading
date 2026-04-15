@@ -82,9 +82,10 @@ def run_full_analysis(symbol):
         
         initial_context = (
             f"Konteks Analisis: {profile_info}\n"
-            f"Data Pasar Saat Ini: Harga {enriched.get('price')}, Tren {enriched.get('market_trend')}, Sentimen {enriched.get('sentiment')}.\n"
+            f"Data Pasar Saat Ini: Harga {enriched.get('price')} ({enriched.get('change')}%). Tren {enriched.get('market_trend')}, Sentimen {enriched.get('sentiment')}.\n"
+            f"Indikator Teknikal: Support1: {enriched.get('support_1')}, Resistance1: {enriched.get('resistance_1')}, BB Upper: {enriched.get('bb_upper')}, BB Lower: {enriched.get('bb_lower')}, MACD: {enriched.get('macd')}.\n"
             f"Berita Terbaru: {json.dumps(enriched.get('news', []))}.\n"
-            "Tugasmu adalah menjadi analis saham profesional. Jika ditanya bidang usaha, gunakan pengetahuan umummu tentang profil perusahaan ini di Indonesia."
+            "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal di atas jika user bertanya tentang support, resistance, atau indikator teknis lainnya."
         )
         chat_sessions[symbol] = [
             {"role": "user", "parts": [{"text": initial_context}]},
@@ -216,8 +217,9 @@ def sync_chat():
 
     initial_context = (
         f"Konteks Analisis: {profile_info}\n"
-        f"Data Pasar Saat Ini: Harga {enriched.get('price')}, Tren {enriched.get('market_trend')}, Sentimen {enriched.get('sentiment')}.\n"
-        "Tugasmu adalah menjadi analis saham profesional. Jika ditanya bidang usaha, gunakan pengetahuan umummu tentang profil perusahaan ini di Indonesia."
+        f"Data Pasar Saat Ini: Harga {enriched.get('price')} ({enriched.get('change')}%). Tren {enriched.get('market_trend')}, Sentimen {enriched.get('sentiment')}.\n"
+        f"Indikator Teknikal: Support1: {enriched.get('support_1')}, Resistance1: {enriched.get('resistance_1')}, BB Upper: {enriched.get('bb_upper')}, BB Lower: {enriched.get('bb_lower')}, MACD: {enriched.get('macd')}.\n"
+        "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal di atas jika user bertanya tentang teknikal."
     )
     chat_sessions[symbol] = [
         {"role": "user", "parts": [{"text": initial_context}]},
