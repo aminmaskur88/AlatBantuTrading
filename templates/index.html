@@ -383,7 +383,10 @@
             else { document.exitFullscreen(); }
         });
         document.addEventListener('fullscreenchange', () => {
-            document.getElementById('btnFullscreen').querySelector('span').innerText = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
+            const btn = document.getElementById('btnFullscreen');
+            if (btn && btn.querySelector('span')) {
+                btn.querySelector('span').innerText = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
+            }
         });
 
         function loadTradingViewWidget(symbol) {
@@ -451,7 +454,12 @@
                 newsList.innerHTML = '<li class="news-item" style="color: var(--text-muted); padding:12px;">Tidak ada berita terbaru.</li>';
             }
 
-            chatBox.innerHTML = '<div class="message bot-message">Halo! Ada yang ingin ditanyakan tentang saham ini?</div>';
+            if (data.chatHtml) {
+                chatBox.innerHTML = data.chatHtml;
+            } else {
+                chatBox.innerHTML = '<div class="message bot-message">Halo! Ada yang ingin ditanyakan tentang saham ini?</div>';
+            }
+            
             loadTradingViewWidget(currentSymbol);
 
             document.getElementById('welcomeScreen').style.display = 'none';
@@ -461,6 +469,15 @@
             document.getElementById('currentTickerText').style.display = 'inline-block';
         }
         
+        function saveChatToSession() {
+            if (!currentSymbol) return;
+            const savedData = JSON.parse(sessionStorage.getItem(`analysis_${currentSymbol.toUpperCase()}`));
+            if (savedData) {
+                savedData.chatHtml = chatBox.innerHTML;
+                sessionStorage.setItem(`analysis_${currentSymbol.toUpperCase()}`, JSON.stringify(savedData));
+            }
+        }
+
         function updateRecentAnalysesList() {
             recentAnalysesList.innerHTML = '';
             const keys = Object.keys(sessionStorage).filter(k => k.startsWith('analysis_'));
@@ -468,6 +485,7 @@
                 recentAnalysesList.innerHTML = '<li style="font-size: 12px; color: var(--text-muted);">Belum ada riwayat.</li>';
                 return;
             }
+            keys.sort().reverse();
             keys.forEach(key => {
                 const data = JSON.parse(sessionStorage.getItem(key));
                 const ticker = key.replace('analysis_', '');
@@ -550,6 +568,9 @@
             const input = isLarge ? largeChatInput : document.getElementById('chatInput');
             const btn = isLarge ? document.getElementById('largeChatBtn') : document.getElementById('chatBtn');
             
+            const savedData = JSON.parse(sessionStorage.getItem(`analysis_${currentSymbol.toUpperCase()}`));
+            const rawHistory = savedData ? savedData.rawHistory : null;
+
             const append = (msg, role, isStatus = false) => {
                 const div = document.createElement('div');
                 div.className = `message ${role}-message`;
@@ -559,6 +580,7 @@
                 largeChatBox.appendChild(div);
                 chatBox.scrollTop = chatBox.scrollHeight;
                 largeChatBox.scrollTop = largeChatBox.scrollHeight;
+                saveChatToSession();
                 return [chatBox.lastChild, largeChatBox.lastChild];
             };
 
@@ -567,7 +589,15 @@
             const statusEls = append('<span class="material-icons-round spin" style="font-size:12px;">sync</span> <span class="status-text">AI sedang berpikir...</span>', 'bot', true);
 
             try {
-                const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol: currentSymbol, message: message }) });
+                const response = await fetch('/api/chat', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ 
+                        symbol: currentSymbol, 
+                        message: message,
+                        history: rawHistory
+                    }) 
+                });
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 while (true) {
@@ -587,6 +617,13 @@
                                     div.innerHTML = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                                     chatBox.appendChild(div.cloneNode(true));
                                     largeChatBox.appendChild(div);
+                                    
+                                    const currentData = JSON.parse(sessionStorage.getItem(`analysis_${currentSymbol.toUpperCase()}`));
+                                    if (currentData) {
+                                        currentData.chatHtml = chatBox.innerHTML;
+                                        if (data.history) currentData.rawHistory = data.history;
+                                        sessionStorage.setItem(`analysis_${currentSymbol.toUpperCase()}`, JSON.stringify(currentData));
+                                    }
                                 }
                             }
                         }

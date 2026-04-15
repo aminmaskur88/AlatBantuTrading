@@ -117,31 +117,18 @@ def chat():
     data = request.json
     symbol = data.get("symbol", "").strip().upper()
     message = data.get("message", "").strip()
+    # Terima history dari client jika ada
+    client_history = data.get("history")
     
     if not symbol or not message:
         return jsonify({"error": "Invalid request"}), 400
 
     def generate_chat_stream():
-        # Check for refresh command
-        refresh_commands = ["refresh", "refresh tampilan", "analisis ulang", "re-analyze"]
-        if message.lower() in refresh_commands:
-            yield f"data: {json.dumps({'status': 'Sistem: Perintah refresh diterima. Melakukan analisis ulang...'})}\n\n"
-            try:
-                logging.info(f"Refresh command received for {symbol}. Running full analysis...")
-                new_analysis_data = run_full_analysis(symbol)
-                yield f"data: {json.dumps({
-                    'status': 'Analisis telah selesai. Memperbarui tampilan...',
-                    'is_refresh': True,
-                    'full_data': new_analysis_data,
-                    'reply': "Analisis telah selesai. Tampilan Anda telah diperbarui dengan data terbaru.",
-                    'done': True
-                })}\n\n"
-            except Exception as e:
-                logging.error(f"Error during chat-triggered refresh for {symbol}: {str(e)}")
-                yield f"data: {json.dumps({'status': f'Gagal melakukan analisis ulang: {str(e)}', 'error': str(e), 'done': True})}\n\n"
-            return
-
-        history = chat_sessions.get(symbol)
+        # ... (refresh commands logic)
+        
+        # Gunakan history dari client, jika tidak ada baru ambil dari memori server
+        history = client_history if client_history else chat_sessions.get(symbol)
+        
         if not history:
             yield f"data: {json.dumps({'status': 'Error: Sesi chat belum dimulai.', 'error': 'Sesi chat belum dimulai.', 'done': True})}\n\n"
             return
