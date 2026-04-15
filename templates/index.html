@@ -88,6 +88,7 @@
         .loader-overlay .material-icons-round { font-size: 48px; animation: spin 2s linear infinite; margin-bottom: 16px; color: var(--accent); }
         
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spin { animation: spin 2s linear infinite; }
         @keyframes pulse {
             0% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(0.95); }
@@ -221,13 +222,13 @@
                         <h2 id="resSymbol" style="margin: 0; font-size: 24px; color: var(--accent);"></h2>
                         <div id="resCompany" style="font-size: 12px; color: var(--text-muted);"></div>
                     </div>
-                <div class="summary-item">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div class="summary-label">Harga Saat Ini</div>
-                        <div id="rtIndicator" style="display: none; font-size: 10px; color: var(--buy); font-weight: 800; border: 1px solid var(--buy); padding: 1px 4px; border-radius: 4px; animation: pulse 2s infinite;">RT</div>
+                    <div style="margin-bottom: 10px; padding: 10px; background: var(--bg-panel); border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">HARGA SAAT INI</div>
+                            <div id="rtIndicator" style="display: none; font-size: 10px; color: var(--buy); font-weight: 800; border: 1px solid var(--buy); padding: 1px 4px; border-radius: 4px; animation: pulse 2s infinite;">RT</div>
+                        </div>
+                        <div id="resPrice" style="color: var(--accent); font-size: 24px; font-weight: 800;">-</div>
                     </div>
-                    <div class="summary-value" id="resPrice" style="color: var(--accent); font-size: 24px;">-</div>
-                </div>
                     <div class="data-row"><span class="data-label">Perubahan:</span><span class="data-value" id="resChange"></span></div>
                     <div class="data-row"><span class="data-label">Tren:</span><span class="data-value" id="resTrend" style="text-transform: capitalize;"></span></div>
                     <div class="data-row"><span class="data-label">Sentimen:</span><span class="data-value" id="resSentiment" style="text-transform: capitalize;"></span></div>
@@ -284,21 +285,18 @@
         </div>
 
         <div class="workspace-content" id="resultsContainer">
-            <!-- Chart -->
             <div class="panel-card" style="padding: 0; overflow: hidden; flex-shrink: 0; border-radius: 12px; display: flex; flex-direction: column;">
                 <div class="panel-header" style="padding: 12px 16px 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 0;"><span class="material-icons-round">stacked_line_chart</span> Grafik Teknikal Real-Time</div>
                 <div id="tradingview_chart" style="height: 450px; width: 100%; background: var(--canvas-bg);"></div>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                <!-- AI Analysis Text -->
                 <div class="panel-card">
                     <div class="panel-header"><span class="material-icons-round">psychology</span> Analisis Mendalam AI</div>
                     <div id="resAnalysis" style="font-size: 13px; line-height: 1.6; white-space: pre-wrap; color: var(--text-main);"></div>
                     <div id="resReason" style="font-size: 12px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color); color: var(--text-muted); font-style: italic;"></div>
                 </div>
 
-                <!-- News -->
                 <div class="panel-card">
                     <div class="panel-header" style="justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 8px;">
@@ -320,7 +318,6 @@
         </div>
     </main>
 
-    <!-- Large Chat Modal -->
     <div id="largeChatModal" class="large-chat-modal">
         <div class="large-chat-content">
             <div style="padding: 16px 24px; background: var(--accent); color: white; display: flex; justify-content: space-between; align-items: center;">
@@ -333,9 +330,7 @@
                 </div>
                 <button class="btn-icon" id="btnCloseLargeChat" style="color: white; background: rgba(255,255,255,0.1);"><span class="material-icons-round">close</span></button>
             </div>
-            <div id="largeChatBox" class="chat-box" style="flex: 1; max-height: none; margin: 0; padding: 24px; background: transparent; overflow-y: auto;">
-                <!-- Messages will be synced here -->
-            </div>
+            <div id="largeChatBox" class="chat-box" style="flex: 1; max-height: none; margin: 0; padding: 24px; background: transparent; overflow-y: auto;"></div>
             <div style="padding: 24px; background: var(--bg-panel); border-top: 1px solid var(--border-color);">
                 <form id="largeChatForm" style="display: flex; gap: 12px; max-width: 100%; margin: 0 auto;">
                     <input type="text" id="largeChatInput" class="input-box" placeholder="Tanyakan apa saja tentang saham ini..." style="padding: 14px 20px; border-radius: 12px; flex: 1; font-size: 14px;" autocomplete="off" spellcheck="false" autocorrect="off">
@@ -348,7 +343,6 @@
     </div>
 
     <script>
-        // --- Global Variables & Initializers ---
         let currentSymbol = "";
         let priceInterval = null;
 
@@ -356,9 +350,10 @@
             if (!currentSymbol) return;
             try {
                 const response = await fetch(`/api/price/${currentSymbol}`);
-                                    const data = await response.json();
-                                if (data.price) {
-                                    const currencyPrefix = data.currency === 'IDR' ? 'Rp ' : (data.currency === 'USD' ? '
+                const data = await response.json();
+                if (data.price) {
+                    const currencyPrefix = data.currency === 'IDR' ? 'Rp ' : (data.currency === 'USD' ? '$' : data.currency + ' ');
+                    const formattedPrice = parseFloat(data.price).toLocaleString('id-ID');
                     document.getElementById('resPrice').textContent = `${currencyPrefix}${formattedPrice}`;
                     
                     const changeEl = document.getElementById('resChange');
@@ -366,7 +361,6 @@
                     changeEl.textContent = `${changeVal}%`;
                     changeEl.style.color = (parseFloat(changeVal) > 0) ? 'var(--buy)' : (parseFloat(changeVal) < 0 ? 'var(--sell)' : 'var(--text-muted)');
                     
-                    // Update Trend slightly
                     const trendEl = document.getElementById('resTrend');
                     if (parseFloat(changeVal) > 0) trendEl.textContent = 'naik';
                     else if (parseFloat(changeVal) < 0) trendEl.textContent = 'turun';
@@ -384,23 +378,21 @@
         const largeChatForm = document.getElementById('largeChatForm');
         const recentAnalysesList = document.getElementById('recentAnalysesList');
 
-        const btnFullscreen = document.getElementById('btnFullscreen');
-        btnFullscreen.addEventListener('click', () => {
+        document.getElementById('btnFullscreen').addEventListener('click', () => {
             if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); } 
             else { document.exitFullscreen(); }
         });
         document.addEventListener('fullscreenchange', () => {
-            btnFullscreen.querySelector('span').innerText = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
+            document.getElementById('btnFullscreen').querySelector('span').innerText = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
         });
 
         function loadTradingViewWidget(symbol) {
-                let tvSymbol = symbol.toUpperCase();
-                tvSymbol = tvSymbol.replace("-", "");
-                if (tvSymbol.length === 4 && !tvSymbol.includes(':') && !["AAPL", "TSLA", "MSFT", "AMZN", "META"].includes(tvSymbol)) {
-                    tvSymbol = "IDX:" + tvSymbol;
-                }
-                const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                document.getElementById('tradingview_chart').innerHTML = '';
+            let tvSymbol = symbol.toUpperCase().replace("-", "");
+            if (tvSymbol.length === 4 && !tvSymbol.includes(':') && !["AAPL", "TSLA", "MSFT", "AMZN", "META"].includes(tvSymbol)) {
+                tvSymbol = "IDX:" + tvSymbol;
+            }
+            const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.getElementById('tradingview_chart').innerHTML = '';
             new TradingView.widget({
                 "container_id": "tradingview_chart", "symbol": tvSymbol, "interval": "D",
                 "theme": isDark ? "dark" : "light", "style": "1", "locale": "id",
@@ -411,21 +403,15 @@
         }
         
         function restoreState(data) {
-            const ticker = data.data.symbol || currentSymbol;
-            currentSymbol = ticker;
-            
-            // Show RT Indicator
+            currentSymbol = data.data.symbol;
             document.getElementById('rtIndicator').style.display = 'block';
-            
-            // Set interval for price refresh if not already set
             if (priceInterval) clearInterval(priceInterval);
             priceInterval = setInterval(refreshPriceOnly, 30000);
 
             const resData = data.data;
             const aiRes = data.ai_result;
 
-            // Populate Sidebar
-            document.getElementById('resSymbol').textContent = ticker.toUpperCase();
+            document.getElementById('resSymbol').textContent = currentSymbol.toUpperCase();
             document.getElementById('resCompany').textContent = resData.company_name;
             
             const currencyPrefix = resData.currency === 'IDR' ? 'Rp ' : (resData.currency === 'USD' ? '$' : resData.currency + ' ');
@@ -442,20 +428,13 @@
 
             const signalBadge = document.getElementById('resSignal');
             signalBadge.textContent = aiRes.signal;
-            signalBadge.className = 'signal-badge ';
-            if(aiRes.signal.toUpperCase() === 'BUY') signalBadge.classList.add('signal-buy');
-            else if(aiRes.signal.toUpperCase() === 'SELL') signalBadge.classList.add('signal-sell');
-            else signalBadge.classList.add('signal-hold');
+            signalBadge.className = 'signal-badge ' + (aiRes.signal.toUpperCase() === 'BUY' ? 'signal-buy' : (aiRes.signal.toUpperCase() === 'SELL' ? 'signal-sell' : 'signal-hold'));
 
-            const formatNum = (val) => {
-                if (val === null || val === undefined || val === 'NaN' || isNaN(parseFloat(val))) return '-';
-                return parseFloat(val).toLocaleString('id-ID');
-            };
+            const formatNum = (val) => (val === null || val === undefined || isNaN(parseFloat(val))) ? '-' : parseFloat(val).toLocaleString('id-ID');
             document.getElementById('resEntry').textContent = formatNum(aiRes.entry_price);
             document.getElementById('resTarget').textContent = formatNum(aiRes.target_price);
             document.getElementById('resCutloss').textContent = formatNum(aiRes.cut_loss_price);
             
-            // Populate Workspace
             document.getElementById('resAnalysis').textContent = aiRes.analysis;
             document.getElementById('resReason').innerHTML = `<b>Alasan AI:</b> ${aiRes.reason}`;
 
@@ -465,32 +444,21 @@
                 resData.news.forEach(n => {
                     const li = document.createElement('li');
                     li.className = 'news-item';
-                    if (n.link) {
-                        li.innerHTML = `<a href="${n.link}" target="_blank">${n.title}</a>`;
-                    } else {
-                        li.textContent = n.title;
-                    }
+                    li.innerHTML = n.link ? `<a href="${n.link}" target="_blank">${n.title}</a>` : `<div style="padding:12px;">${n.title}</div>`;
                     newsList.appendChild(li);
                 });
             } else {
-                newsList.innerHTML = '<li class="news-item" style="color: var(--text-muted);">Tidak ada berita terbaru.</li>';
+                newsList.innerHTML = '<li class="news-item" style="color: var(--text-muted); padding:12px;">Tidak ada berita terbaru.</li>';
             }
 
-            // Chat reset - check if chat history exists in saved data
-             chatBox.innerHTML = data.chatHistory || '<div class="message bot-message">Halo! Ada yang ingin ditanyakan tentang saham ini?</div>';
+            chatBox.innerHTML = '<div class="message bot-message">Halo! Ada yang ingin ditanyakan tentang saham ini?</div>';
+            loadTradingViewWidget(currentSymbol);
 
-            // Chart
-            loadTradingViewWidget(ticker);
-
-            // Show UI
             document.getElementById('welcomeScreen').style.display = 'none';
             document.getElementById('sidebarResults').style.display = 'flex';
             document.getElementById('resultsContainer').style.display = 'flex';
-            document.getElementById('currentTickerText').textContent = ticker.toUpperCase();
+            document.getElementById('currentTickerText').textContent = currentSymbol.toUpperCase();
             document.getElementById('currentTickerText').style.display = 'inline-block';
-
-            // If loading from history, we might need to re-sync chat with backend
-            // For now, just display it. A full sync would require another API call.
         }
         
         function updateRecentAnalysesList() {
@@ -501,187 +469,73 @@
                 return;
             }
             keys.forEach(key => {
-                try {
-                    const data = JSON.parse(sessionStorage.getItem(key));
-                    const ticker = key.replace('analysis_', '');
-                    const companyName = data.data.company_name || ticker;
-                    const li = document.createElement('li');
-                    li.style = 'display: flex; justify-content: space-between; align-items: center; font-size: 13px; background: var(--bg-app); padding: 8px 12px; border-radius: 6px;';
-                    li.innerHTML = `
-                        <span style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;" title="${companyName}">${companyName}</span>
-                        <button class="btn-primary" data-symbol="${ticker}" style="width: auto; padding: 4px 10px; font-size: 11px; flex-shrink: 0;">Muat</button>
-                    `;
-                    recentAnalysesList.appendChild(li);
-                } catch (e) {
-                    console.error(`Failed to parse recent analysis for key ${key}`, e);
-                    sessionStorage.removeItem(key); // Clean up corrupted data
-                }
+                const data = JSON.parse(sessionStorage.getItem(key));
+                const ticker = key.replace('analysis_', '');
+                const li = document.createElement('li');
+                li.style = 'display: flex; justify-content: space-between; align-items: center; font-size: 13px; background: var(--bg-app); padding: 8px 12px; border-radius: 6px;';
+                li.innerHTML = `<span style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;">${data.data.company_name || ticker}</span>
+                                <button class="btn-primary load-history-btn" data-symbol="${ticker}" style="width: auto; padding: 4px 10px; font-size: 11px; flex-shrink: 0;">Muat</button>`;
+                recentAnalysesList.appendChild(li);
             });
         }
         
         recentAnalysesList.addEventListener('click', (e) => {
-            if (e.target.tagName === 'BUTTON' && e.target.dataset.symbol) {
+            if (e.target.classList.contains('load-history-btn')) {
                 const symbol = e.target.dataset.symbol;
-                const dataString = sessionStorage.getItem(`analysis_${symbol}`);
-                if (dataString) {
-                    try {
-                        const data = JSON.parse(dataString);
-                        // To properly restore chat, we need to tell the backend to use our history.
-                        // For now, let's just load the visuals. We will need another API call to sync chat session.
-                        fetch('/api/chat/sync', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ symbol: symbol })
-                        }).then(() => {
-                           restoreState(data);
-                           console.log(`State for ${symbol} restored.`);
-                        });
-                    } catch (error) {
-                        console.error('Failed to parse or restore state:', error);
-                    }
-                }
+                const data = JSON.parse(sessionStorage.getItem(`analysis_${symbol}`));
+                fetch('/api/chat/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol: symbol }) })
+                .then(() => restoreState(data));
             }
         });
-
-        document.addEventListener('DOMContentLoaded', updateRecentAnalysesList);
 
         document.getElementById('analyzeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const ticker = document.getElementById('tickerInput').value.trim();
             if(!ticker) return;
-
             document.getElementById('errorAlert').style.display = 'none';
             document.getElementById('mainLoader').style.display = 'flex';
             document.getElementById('analyzeBtn').disabled = true;
-
             try {
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ symbol: ticker })
-                });
+                const response = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol: ticker }) });
                 const data = await response.json();
-
-                if (!response.ok) throw new Error(data.error || 'Terjadi kesalahan pada server');
-                
-                // Add symbol to data for easier restore
+                if (!response.ok) throw new Error(data.error || 'Server error');
                 data.data.symbol = ticker.toUpperCase();
-
-                // Save to session storage BEFORE restoring state
                 sessionStorage.setItem(`analysis_${ticker.toUpperCase()}`, JSON.stringify(data));
-                
                 restoreState(data);
                 updateRecentAnalysesList();
-                
             } catch (error) {
-                const alert = document.getElementById('errorAlert');
-                alert.textContent = error.message;
-                alert.style.display = 'block';
+                document.getElementById('errorAlert').textContent = error.message;
+                document.getElementById('errorAlert').style.display = 'block';
             } finally {
                 document.getElementById('mainLoader').style.display = 'none';
                 document.getElementById('analyzeBtn').disabled = false;
             }
         });
 
-        // --- Refresh News Feature ---
         document.getElementById('btnRefreshNews').addEventListener('click', async () => {
             if (!currentSymbol) return;
-
             const btn = document.getElementById('btnRefreshNews');
-            const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<span class="material-icons-round" style="font-size: 14px; animation: spin 1s linear infinite;">sync</span>';
-            
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<span class="material-icons-round spin" style="font-size: 14px;">sync</span>';
             try {
-                const response = await fetch('/api/refresh_news', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ symbol: currentSymbol })
-                });
-
+                const response = await fetch('/api/refresh_news', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol: currentSymbol }) });
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'Gagal refresh berita');
-
-                const newsList = document.getElementById('resNewsList');
-                newsList.innerHTML = ''; // Clear existing news
-                if (data.news && data.news.length > 0) {
+                if (data.news) {
+                    const list = document.getElementById('resNewsList');
+                    list.innerHTML = '';
                     data.news.forEach(n => {
                         const li = document.createElement('li');
                         li.className = 'news-item';
-                        if (n.link) {
-                            li.innerHTML = `<a href="${n.link}" target="_blank">${n.title}</a>`;
-                        } else {
-                            li.textContent = n.title;
-                        }
-                        newsList.appendChild(li);
+                        li.innerHTML = n.link ? `<a href="${n.link}" target="_blank">${n.title}</a>` : `<div style="padding:12px;">${n.title}</div>`;
+                        list.appendChild(li);
                     });
-                } else {
-                    newsList.innerHTML = '<li class="news-item" style="color: var(--text-muted);">Tidak ada berita terbaru ditemukan.</li>';
                 }
-                
-                // Add a small notification in both chat boxes
-                const updateMsg = document.createElement('div');
-                updateMsg.className = 'message bot-message';
-                updateMsg.style.background = 'var(--item-active)';
-                updateMsg.innerHTML = '📰 Daftar berita telah diperbarui.';
-                chatBox.appendChild(updateMsg);
-                largeChatBox.appendChild(updateMsg.cloneNode(true));
-                chatBox.scrollTop = chatBox.scrollHeight;
-                largeChatBox.scrollTop = largeChatBox.scrollHeight;
-
-            } catch (error) {
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'message bot-message';
-                errorMsg.style.color = 'var(--sell)';
-                errorMsg.textContent = `Error: ${error.message}`;
-                chatBox.appendChild(errorMsg.cloneNode(true));
-                largeChatBox.appendChild(errorMsg);
-                chatBox.scrollTop = chatBox.scrollHeight;
-                largeChatBox.scrollTop = largeChatBox.scrollHeight;
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                // scroll to bottom just in case
-                chatBox.scrollTop = chatBox.scrollHeight;
-                largeChatBox.scrollTop = largeChatBox.scrollHeight;
-            }
+            } finally { btn.disabled = false; btn.innerHTML = orig; }
         });
 
-        function updateDashboard(aiRes) {
-            const formatNum = (val) => {
-                if (val === null || val === undefined || isNaN(parseFloat(val))) return '-';
-                return parseFloat(val).toLocaleString('id-ID');
-            };
-
-            // Signal
-            const signalBadge = document.getElementById('resSignal');
-            signalBadge.textContent = aiRes.signal;
-            signalBadge.className = 'signal-badge ';
-            if(aiRes.signal.toUpperCase() === 'BUY') signalBadge.classList.add('signal-buy');
-            else if(aiRes.signal.toUpperCase() === 'SELL') signalBadge.classList.add('signal-sell');
-            else signalBadge.classList.add('signal-hold');
-
-            // Data Row
-            document.getElementById('resEntry').textContent = formatNum(aiRes.entry_price);
-            document.getElementById('resTarget').textContent = formatNum(aiRes.target_price);
-            document.getElementById('resCutloss').textContent = formatNum(aiRes.cut_loss_price);
-
-            // Analysis
-            document.getElementById('resAnalysis').textContent = aiRes.analysis;
-            document.getElementById('resReason').innerHTML = `<b>Update Alasan AI:</b> ${aiRes.reason}`;
-            
-            // Notifikasi Update
-            const updateMsg = document.createElement('div');
-            updateMsg.className = 'message bot-message';
-            updateMsg.style.background = 'var(--item-active)';
-            updateMsg.innerHTML = '✨ <b>Dashboard telah diperbarui berdasarkan riset terbaru.</b>';
-            document.getElementById('chatBox').appendChild(updateMsg);
-        }
-
-        // --- Large Chat Logic ---
         document.getElementById('btnExpandChat').onclick = () => {
             if (!currentSymbol) return;
-            // Sync content from sidebar to large chat
             largeChatBox.innerHTML = chatBox.innerHTML;
             document.getElementById('modalTickerInfo').textContent = `${currentSymbol} - ${document.getElementById('resCompany').textContent}`;
             largeChatModal.style.display = 'flex';
@@ -689,599 +543,67 @@
             largeChatInput.focus();
         };
 
-        document.getElementById('btnCloseLargeChat').onclick = () => {
-            largeChatModal.style.display = 'none';
-        };
+        document.getElementById('btnCloseLargeChat').onclick = () => { largeChatModal.style.display = 'none'; };
 
         async function handleChat(message, isLarge = false) {
-            const currentChatBox = isLarge ? largeChatBox : chatBox;
-            const currentInput = isLarge ? largeChatInput : document.getElementById('chatInput');
-            const currentBtn = isLarge ? document.getElementById('largeChatBtn') : document.getElementById('chatBtn');
-
             if (!message || !currentSymbol) return;
-
-            // Add user message to both boxes
-            const appendMessage = (msg, role, isStatus = false) => {
+            const input = isLarge ? largeChatInput : document.getElementById('chatInput');
+            const btn = isLarge ? document.getElementById('largeChatBtn') : document.getElementById('chatBtn');
+            
+            const append = (msg, role, isStatus = false) => {
                 const div = document.createElement('div');
                 div.className = `message ${role}-message`;
-                if (isStatus) {
-                    div.style.background = 'transparent';
-                    div.style.color = 'var(--text-muted)';
-                    div.style.fontSize = '11px';
-                    div.style.fontStyle = 'italic';
-                    div.style.border = 'none';
-                    div.style.padding = '4px 0';
-                }
+                if (isStatus) { div.style.cssText = 'background:transparent; color:var(--text-muted); font-size:11px; font-style:italic; border:none; padding:4px 0;'; }
                 div.innerHTML = msg;
                 chatBox.appendChild(div.cloneNode(true));
                 largeChatBox.appendChild(div);
                 chatBox.scrollTop = chatBox.scrollHeight;
                 largeChatBox.scrollTop = largeChatBox.scrollHeight;
-                return [chatBox.lastChild, largeChatBox.lastChild]; // Return references
+                return [chatBox.lastChild, largeChatBox.lastChild];
             };
 
-            appendMessage(message, 'user');
-
-            currentInput.value = '';
-            currentInput.disabled = true;
-            currentBtn.disabled = true;
-
-            // Indicator for status updates
-            const statusElements = appendMessage('<span class="material-icons-round" style="font-size: 12px; animation: spin 1s linear infinite; vertical-align: middle;">sync</span> <span class="status-text">AI sedang berpikir...</span>', 'bot', true);
+            append(message, 'user');
+            input.value = ''; input.disabled = true; btn.disabled = true;
+            const statusEls = append('<span class="material-icons-round spin" style="font-size:12px;">sync</span> <span class="status-text">AI sedang berpikir...</span>', 'bot', true);
 
             try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ symbol: currentSymbol, message: message })
-                });
-
-                if (!response.ok) throw new Error('Network response was not ok');
-
+                const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol: currentSymbol, message: message }) });
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
-                
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) break;
-                    
                     const chunk = decoder.decode(value);
                     const lines = chunk.split('\n');
-                    
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
                             const data = JSON.parse(line.substring(6));
-                            
-                            if (data.status) {
-                                statusElements.forEach(el => {
-                                    el.querySelector('.status-text').textContent = data.status;
-                                });
-                            }
-                            
-                            if (data.error) {
-                                throw new Error(data.error);
-                            }
-
+                            if (data.status) statusEls.forEach(el => el.querySelector('.status-text').textContent = data.status);
                             if (data.done) {
-                                // Remove status indicators
-                                statusElements.forEach(el => el.remove());
-                                
-                                // Handle Refresh
-                                if (data.is_refresh && data.full_data) {
-                                    const ticker = data.full_data.data.symbol || currentSymbol;
-                                    sessionStorage.setItem(`analysis_${ticker.toUpperCase()}`, JSON.stringify(data.full_data));
-                                    restoreState(data.full_data);
-                                    updateRecentAnalysesList();
-                                }
-                                
-                                // Append Final Reply
+                                statusEls.forEach(el => el.remove());
                                 if (data.reply) {
-                                    const botMsgDiv = document.createElement('div');
-                                    botMsgDiv.className = 'message bot-message';
-                                    let formattedText = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                                    formattedText = formattedText.replace(/\n/g, '<br>');
-                                    botMsgDiv.innerHTML = formattedText;
-                                    chatBox.appendChild(botMsgDiv.cloneNode(true));
-                                    largeChatBox.appendChild(botMsgDiv);
+                                    const div = document.createElement('div');
+                                    div.className = 'message bot-message';
+                                    div.innerHTML = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                                    chatBox.appendChild(div.cloneNode(true));
+                                    largeChatBox.appendChild(div);
                                 }
                             }
                         }
                     }
                     chatBox.scrollTop = chatBox.scrollHeight;
                     largeChatBox.scrollTop = largeChatBox.scrollHeight;
-                }
-                
-            } catch (error) {
-                statusElements.forEach(el => el.remove());
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'message bot-message';
-                errorMsg.style.color = 'var(--sell)';
-                errorMsg.textContent = `Error: ${error.message}`;
-                chatBox.appendChild(errorMsg.cloneNode(true));
-                largeChatBox.appendChild(errorMsg);
-            } finally {
-                chatBox.scrollTop = chatBox.scrollHeight;
-                largeChatBox.scrollTop = largeChatBox.scrollHeight;
-                currentInput.disabled = false;
-                currentBtn.disabled = false;
-                currentInput.focus();
-            }
-        }
-
-        document.getElementById('chatForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            handleChat(document.getElementById('chatInput').value.trim(), false);
-        });
-
-        largeChatForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            handleChat(largeChatInput.value.trim(), true);
-        });
-    </script>
-
-</body>
-</html> : data.currency + ' ');
-                                    const formattedPrice = parseFloat(data.price).toLocaleString('id-ID');
-                
-                    document.getElementById('resPrice').textContent = `${currencyPrefix}${formattedPrice}`;
-                    
-                    const changeEl = document.getElementById('resChange');
-                    const changeVal = parseFloat(data.change).toFixed(2);
-                    changeEl.textContent = `${changeVal}%`;
-                    changeEl.style.color = (parseFloat(changeVal) > 0) ? 'var(--buy)' : (parseFloat(changeVal) < 0 ? 'var(--sell)' : 'var(--text-muted)');
-                    
-                    // Update Trend slightly
-                    const trendEl = document.getElementById('resTrend');
-                    if (parseFloat(changeVal) > 0) trendEl.textContent = 'naik';
-                    else if (parseFloat(changeVal) < 0) trendEl.textContent = 'turun';
-                    else trendEl.textContent = 'stagnan';
                 }
             } catch (e) {
-                console.error("Failed to refresh price:", e);
-            }
+                statusEls.forEach(el => el.remove());
+                append(`Error: ${e.message}`, 'bot');
+            } finally { input.disabled = false; btn.disabled = false; input.focus(); }
         }
 
-        const chatBox = document.getElementById('chatBox');
-        const largeChatModal = document.getElementById('largeChatModal');
-        const largeChatBox = document.getElementById('largeChatBox');
-        const largeChatInput = document.getElementById('largeChatInput');
-        const largeChatForm = document.getElementById('largeChatForm');
-        const recentAnalysesList = document.getElementById('recentAnalysesList');
-
-        const btnFullscreen = document.getElementById('btnFullscreen');
-        btnFullscreen.addEventListener('click', () => {
-            if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); } 
-            else { document.exitFullscreen(); }
-        });
-        document.addEventListener('fullscreenchange', () => {
-            btnFullscreen.querySelector('span').innerText = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
-        });
-
-        function loadTradingViewWidget(symbol) {
-                let tvSymbol = symbol.toUpperCase();
-                tvSymbol = tvSymbol.replace("-", "");
-                if (tvSymbol.length === 4 && !tvSymbol.includes(':') && !["AAPL", "TSLA", "MSFT", "AMZN", "META"].includes(tvSymbol)) {
-                    tvSymbol = "IDX:" + tvSymbol;
-                }
-                const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                document.getElementById('tradingview_chart').innerHTML = '';
-            new TradingView.widget({
-                "container_id": "tradingview_chart", "symbol": tvSymbol, "interval": "D",
-                "theme": isDark ? "dark" : "light", "style": "1", "locale": "id",
-                "width": "100%", "height": 450, "timezone": "Asia/Jakarta",
-                "toolbar_bg": "transparent", "enable_publishing": false,
-                "allow_symbol_change": true, "save_image": false
-            });
-        }
+        document.getElementById('chatForm').addEventListener('submit', (e) => { e.preventDefault(); handleChat(document.getElementById('chatInput').value.trim(), false); });
+        largeChatForm.addEventListener('submit', (e) => { e.preventDefault(); handleChat(largeChatInput.value.trim(), true); });
         
-        function restoreState(data) {
-            const ticker = data.data.symbol || currentSymbol;
-            currentSymbol = ticker;
-            
-            // Show RT Indicator
-            document.getElementById('rtIndicator').style.display = 'block';
-            
-            // Set interval for price refresh if not already set
-            if (priceInterval) clearInterval(priceInterval);
-            priceInterval = setInterval(refreshPriceOnly, 30000);
-
-            const resData = data.data;
-            const aiRes = data.ai_result;
-
-            // Populate Sidebar
-            document.getElementById('resSymbol').textContent = ticker.toUpperCase();
-            document.getElementById('resCompany').textContent = resData.company_name;
-            
-            const currencyPrefix = resData.currency === 'IDR' ? 'Rp ' : (resData.currency === 'USD' ? '$' : resData.currency + ' ');
-            const formattedPrice = resData.price ? parseFloat(resData.price).toLocaleString('id-ID') : '-';
-            document.getElementById('resPrice').textContent = `${currencyPrefix}${formattedPrice}`;
-            
-            const changeEl = document.getElementById('resChange');
-            const changeVal = resData.change ? parseFloat(resData.change).toFixed(2) : '0.00';
-            changeEl.textContent = `${changeVal}%`;
-            changeEl.style.color = (parseFloat(changeVal) > 0) ? 'var(--buy)' : (parseFloat(changeVal) < 0 ? 'var(--sell)' : 'var(--text-muted)');
-
-            document.getElementById('resTrend').textContent = resData.market_trend || '-';
-            document.getElementById('resSentiment').textContent = resData.sentiment || '-';
-
-            const signalBadge = document.getElementById('resSignal');
-            signalBadge.textContent = aiRes.signal;
-            signalBadge.className = 'signal-badge ';
-            if(aiRes.signal.toUpperCase() === 'BUY') signalBadge.classList.add('signal-buy');
-            else if(aiRes.signal.toUpperCase() === 'SELL') signalBadge.classList.add('signal-sell');
-            else signalBadge.classList.add('signal-hold');
-
-            const formatNum = (val) => {
-                if (val === null || val === undefined || val === 'NaN' || isNaN(parseFloat(val))) return '-';
-                return parseFloat(val).toLocaleString('id-ID');
-            };
-            document.getElementById('resEntry').textContent = formatNum(aiRes.entry_price);
-            document.getElementById('resTarget').textContent = formatNum(aiRes.target_price);
-            document.getElementById('resCutloss').textContent = formatNum(aiRes.cut_loss_price);
-            
-            // Populate Workspace
-            document.getElementById('resAnalysis').textContent = aiRes.analysis;
-            document.getElementById('resReason').innerHTML = `<b>Alasan AI:</b> ${aiRes.reason}`;
-
-            const newsList = document.getElementById('resNewsList');
-            newsList.innerHTML = '';
-            if (resData.news && resData.news.length > 0) {
-                resData.news.forEach(n => {
-                    const li = document.createElement('li');
-                    li.className = 'news-item';
-                    if (n.link) {
-                        li.innerHTML = `<a href="${n.link}" target="_blank">${n.title}</a>`;
-                    } else {
-                        li.textContent = n.title;
-                    }
-                    newsList.appendChild(li);
-                });
-            } else {
-                newsList.innerHTML = '<li class="news-item" style="color: var(--text-muted);">Tidak ada berita terbaru.</li>';
-            }
-
-            // Chat reset - check if chat history exists in saved data
-             chatBox.innerHTML = data.chatHistory || '<div class="message bot-message">Halo! Ada yang ingin ditanyakan tentang saham ini?</div>';
-
-            // Chart
-            loadTradingViewWidget(ticker);
-
-            // Show UI
-            document.getElementById('welcomeScreen').style.display = 'none';
-            document.getElementById('sidebarResults').style.display = 'flex';
-            document.getElementById('resultsContainer').style.display = 'flex';
-            document.getElementById('currentTickerText').textContent = ticker.toUpperCase();
-            document.getElementById('currentTickerText').style.display = 'inline-block';
-
-            // If loading from history, we might need to re-sync chat with backend
-            // For now, just display it. A full sync would require another API call.
-        }
-        
-        function updateRecentAnalysesList() {
-            recentAnalysesList.innerHTML = '';
-            const keys = Object.keys(sessionStorage).filter(k => k.startsWith('analysis_'));
-            if (keys.length === 0) {
-                recentAnalysesList.innerHTML = '<li style="font-size: 12px; color: var(--text-muted);">Belum ada riwayat.</li>';
-                return;
-            }
-            keys.forEach(key => {
-                try {
-                    const data = JSON.parse(sessionStorage.getItem(key));
-                    const ticker = key.replace('analysis_', '');
-                    const companyName = data.data.company_name || ticker;
-                    const li = document.createElement('li');
-                    li.style = 'display: flex; justify-content: space-between; align-items: center; font-size: 13px; background: var(--bg-app); padding: 8px 12px; border-radius: 6px;';
-                    li.innerHTML = `
-                        <span style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;" title="${companyName}">${companyName}</span>
-                        <button class="btn-primary" data-symbol="${ticker}" style="width: auto; padding: 4px 10px; font-size: 11px; flex-shrink: 0;">Muat</button>
-                    `;
-                    recentAnalysesList.appendChild(li);
-                } catch (e) {
-                    console.error(`Failed to parse recent analysis for key ${key}`, e);
-                    sessionStorage.removeItem(key); // Clean up corrupted data
-                }
-            });
-        }
-        
-        recentAnalysesList.addEventListener('click', (e) => {
-            if (e.target.tagName === 'BUTTON' && e.target.dataset.symbol) {
-                const symbol = e.target.dataset.symbol;
-                const dataString = sessionStorage.getItem(`analysis_${symbol}`);
-                if (dataString) {
-                    try {
-                        const data = JSON.parse(dataString);
-                        // To properly restore chat, we need to tell the backend to use our history.
-                        // For now, let's just load the visuals. We will need another API call to sync chat session.
-                        fetch('/api/chat/sync', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ symbol: symbol })
-                        }).then(() => {
-                           restoreState(data);
-                           console.log(`State for ${symbol} restored.`);
-                        });
-                    } catch (error) {
-                        console.error('Failed to parse or restore state:', error);
-                    }
-                }
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', updateRecentAnalysesList);
-
-        document.getElementById('analyzeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const ticker = document.getElementById('tickerInput').value.trim();
-            if(!ticker) return;
-
-            document.getElementById('errorAlert').style.display = 'none';
-            document.getElementById('mainLoader').style.display = 'flex';
-            document.getElementById('analyzeBtn').disabled = true;
-
-            try {
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ symbol: ticker })
-                });
-                const data = await response.json();
-
-                if (!response.ok) throw new Error(data.error || 'Terjadi kesalahan pada server');
-                
-                // Add symbol to data for easier restore
-                data.data.symbol = ticker.toUpperCase();
-
-                // Save to session storage BEFORE restoring state
-                sessionStorage.setItem(`analysis_${ticker.toUpperCase()}`, JSON.stringify(data));
-                
-                restoreState(data);
-                updateRecentAnalysesList();
-                
-            } catch (error) {
-                const alert = document.getElementById('errorAlert');
-                alert.textContent = error.message;
-                alert.style.display = 'block';
-            } finally {
-                document.getElementById('mainLoader').style.display = 'none';
-                document.getElementById('analyzeBtn').disabled = false;
-            }
-        });
-
-        // --- Refresh News Feature ---
-        document.getElementById('btnRefreshNews').addEventListener('click', async () => {
-            if (!currentSymbol) return;
-
-            const btn = document.getElementById('btnRefreshNews');
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="material-icons-round" style="font-size: 14px; animation: spin 1s linear infinite;">sync</span>';
-            
-            try {
-                const response = await fetch('/api/refresh_news', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ symbol: currentSymbol })
-                });
-
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'Gagal refresh berita');
-
-                const newsList = document.getElementById('resNewsList');
-                newsList.innerHTML = ''; // Clear existing news
-                if (data.news && data.news.length > 0) {
-                    data.news.forEach(n => {
-                        const li = document.createElement('li');
-                        li.className = 'news-item';
-                        if (n.link) {
-                            li.innerHTML = `<a href="${n.link}" target="_blank">${n.title}</a>`;
-                        } else {
-                            li.textContent = n.title;
-                        }
-                        newsList.appendChild(li);
-                    });
-                } else {
-                    newsList.innerHTML = '<li class="news-item" style="color: var(--text-muted);">Tidak ada berita terbaru ditemukan.</li>';
-                }
-                
-                // Add a small notification in both chat boxes
-                const updateMsg = document.createElement('div');
-                updateMsg.className = 'message bot-message';
-                updateMsg.style.background = 'var(--item-active)';
-                updateMsg.innerHTML = '📰 Daftar berita telah diperbarui.';
-                chatBox.appendChild(updateMsg);
-                largeChatBox.appendChild(updateMsg.cloneNode(true));
-                chatBox.scrollTop = chatBox.scrollHeight;
-                largeChatBox.scrollTop = largeChatBox.scrollHeight;
-
-            } catch (error) {
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'message bot-message';
-                errorMsg.style.color = 'var(--sell)';
-                errorMsg.textContent = `Error: ${error.message}`;
-                chatBox.appendChild(errorMsg.cloneNode(true));
-                largeChatBox.appendChild(errorMsg);
-                chatBox.scrollTop = chatBox.scrollHeight;
-                largeChatBox.scrollTop = largeChatBox.scrollHeight;
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                // scroll to bottom just in case
-                chatBox.scrollTop = chatBox.scrollHeight;
-                largeChatBox.scrollTop = largeChatBox.scrollHeight;
-            }
-        });
-
-        function updateDashboard(aiRes) {
-            const formatNum = (val) => {
-                if (val === null || val === undefined || isNaN(parseFloat(val))) return '-';
-                return parseFloat(val).toLocaleString('id-ID');
-            };
-
-            // Signal
-            const signalBadge = document.getElementById('resSignal');
-            signalBadge.textContent = aiRes.signal;
-            signalBadge.className = 'signal-badge ';
-            if(aiRes.signal.toUpperCase() === 'BUY') signalBadge.classList.add('signal-buy');
-            else if(aiRes.signal.toUpperCase() === 'SELL') signalBadge.classList.add('signal-sell');
-            else signalBadge.classList.add('signal-hold');
-
-            // Data Row
-            document.getElementById('resEntry').textContent = formatNum(aiRes.entry_price);
-            document.getElementById('resTarget').textContent = formatNum(aiRes.target_price);
-            document.getElementById('resCutloss').textContent = formatNum(aiRes.cut_loss_price);
-
-            // Analysis
-            document.getElementById('resAnalysis').textContent = aiRes.analysis;
-            document.getElementById('resReason').innerHTML = `<b>Update Alasan AI:</b> ${aiRes.reason}`;
-            
-            // Notifikasi Update
-            const updateMsg = document.createElement('div');
-            updateMsg.className = 'message bot-message';
-            updateMsg.style.background = 'var(--item-active)';
-            updateMsg.innerHTML = '✨ <b>Dashboard telah diperbarui berdasarkan riset terbaru.</b>';
-            document.getElementById('chatBox').appendChild(updateMsg);
-        }
-
-        // --- Large Chat Logic ---
-        document.getElementById('btnExpandChat').onclick = () => {
-            if (!currentSymbol) return;
-            // Sync content from sidebar to large chat
-            largeChatBox.innerHTML = chatBox.innerHTML;
-            document.getElementById('modalTickerInfo').textContent = `${currentSymbol} - ${document.getElementById('resCompany').textContent}`;
-            largeChatModal.style.display = 'flex';
-            largeChatBox.scrollTop = largeChatBox.scrollHeight;
-            largeChatInput.focus();
-        };
-
-        document.getElementById('btnCloseLargeChat').onclick = () => {
-            largeChatModal.style.display = 'none';
-        };
-
-        async function handleChat(message, isLarge = false) {
-            const currentChatBox = isLarge ? largeChatBox : chatBox;
-            const currentInput = isLarge ? largeChatInput : document.getElementById('chatInput');
-            const currentBtn = isLarge ? document.getElementById('largeChatBtn') : document.getElementById('chatBtn');
-
-            if (!message || !currentSymbol) return;
-
-            // Add user message to both boxes
-            const appendMessage = (msg, role, isStatus = false) => {
-                const div = document.createElement('div');
-                div.className = `message ${role}-message`;
-                if (isStatus) {
-                    div.style.background = 'transparent';
-                    div.style.color = 'var(--text-muted)';
-                    div.style.fontSize = '11px';
-                    div.style.fontStyle = 'italic';
-                    div.style.border = 'none';
-                    div.style.padding = '4px 0';
-                }
-                div.innerHTML = msg;
-                chatBox.appendChild(div.cloneNode(true));
-                largeChatBox.appendChild(div);
-                chatBox.scrollTop = chatBox.scrollHeight;
-                largeChatBox.scrollTop = largeChatBox.scrollHeight;
-                return [chatBox.lastChild, largeChatBox.lastChild]; // Return references
-            };
-
-            appendMessage(message, 'user');
-
-            currentInput.value = '';
-            currentInput.disabled = true;
-            currentBtn.disabled = true;
-
-            // Indicator for status updates
-            const statusElements = appendMessage('<span class="material-icons-round" style="font-size: 12px; animation: spin 1s linear infinite; vertical-align: middle;">sync</span> <span class="status-text">AI sedang berpikir...</span>', 'bot', true);
-
-            try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ symbol: currentSymbol, message: message })
-                });
-
-                if (!response.ok) throw new Error('Network response was not ok');
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                
-                while (true) {
-                    const { value, done } = await reader.read();
-                    if (done) break;
-                    
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
-                    
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const data = JSON.parse(line.substring(6));
-                            
-                            if (data.status) {
-                                statusElements.forEach(el => {
-                                    el.querySelector('.status-text').textContent = data.status;
-                                });
-                            }
-                            
-                            if (data.error) {
-                                throw new Error(data.error);
-                            }
-
-                            if (data.done) {
-                                // Remove status indicators
-                                statusElements.forEach(el => el.remove());
-                                
-                                // Handle Refresh
-                                if (data.is_refresh && data.full_data) {
-                                    const ticker = data.full_data.data.symbol || currentSymbol;
-                                    sessionStorage.setItem(`analysis_${ticker.toUpperCase()}`, JSON.stringify(data.full_data));
-                                    restoreState(data.full_data);
-                                    updateRecentAnalysesList();
-                                }
-                                
-                                // Append Final Reply
-                                if (data.reply) {
-                                    const botMsgDiv = document.createElement('div');
-                                    botMsgDiv.className = 'message bot-message';
-                                    let formattedText = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                                    formattedText = formattedText.replace(/\n/g, '<br>');
-                                    botMsgDiv.innerHTML = formattedText;
-                                    chatBox.appendChild(botMsgDiv.cloneNode(true));
-                                    largeChatBox.appendChild(botMsgDiv);
-                                }
-                            }
-                        }
-                    }
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                    largeChatBox.scrollTop = largeChatBox.scrollHeight;
-                }
-                
-            } catch (error) {
-                statusElements.forEach(el => el.remove());
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'message bot-message';
-                errorMsg.style.color = 'var(--sell)';
-                errorMsg.textContent = `Error: ${error.message}`;
-                chatBox.appendChild(errorMsg.cloneNode(true));
-                largeChatBox.appendChild(errorMsg);
-            } finally {
-                chatBox.scrollTop = chatBox.scrollHeight;
-                largeChatBox.scrollTop = largeChatBox.scrollHeight;
-                currentInput.disabled = false;
-                currentBtn.disabled = false;
-                currentInput.focus();
-            }
-        }
-
-        document.getElementById('chatForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            handleChat(document.getElementById('chatInput').value.trim(), false);
-        });
-
-        largeChatForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            handleChat(largeChatInput.value.trim(), true);
-        });
+        updateRecentAnalysesList();
     </script>
-
 </body>
 </html>
