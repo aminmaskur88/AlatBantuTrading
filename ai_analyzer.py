@@ -137,14 +137,59 @@ def chat_with_gemini(api_keys, history, user_message):
         },
         {
             "name": "get_stock_price",
-            "description": "Mengambil harga saham terkini untuk simbol saham tertentu dari Yahoo Finance. Gunakan ini khusus untuk mendapatkan harga real-time, misal 'harga BBCA sekarang'. Simbol saham Indonesia biasanya diakhiri dengan '.JK' (misal: 'BBCA.JK'), pastikan format ini jika mencari saham Indonesia. Jika user menyebutkan nama perusahaan Indonesia tanpa '.JK', tambahkan secara otomatis.",
+            "description": "Mengambil harga saham terkini untuk simbol saham tertentu dari Yahoo Finance. Gunakan ini khusus untuk mendapatkan harga real-time.",
             "parameters": {
                 "type": "OBJECT",
                 "properties": {
                     "symbol": {
                         "type": "STRING",
-                        "description": "Simbol saham yang akan dicari, contoh: 'BBCA.JK', 'AAPL', 'MSFT'."
+                        "description": "Simbol saham, contoh: 'BBCA.JK', 'AAPL'."
                     }
+                },
+                "required": ["symbol"]
+            }
+        },
+        {
+            "name": "get_historical_stock_data",
+            "description": "Mengambil data harga historis (Close) untuk simbol saham tertentu. Penting untuk melihat tren masa lalu.",
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "symbol": { "type": "STRING", "description": "Simbol saham." },
+                    "range": { "type": "STRING", "description": "Rentang waktu: '1mo', '3mo', '6mo', '1y'." }
+                },
+                "required": ["symbol"]
+            }
+        },
+        {
+            "name": "get_fundamental_data",
+            "description": "Mengambil data fundamental seperti Market Cap, 52-week high/low, dan info bursa.",
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "symbol": { "type": "STRING", "description": "Simbol saham." }
+                },
+                "required": ["symbol"]
+            }
+        },
+        {
+            "name": "get_technical_analysis",
+            "description": "Menghitung indikator teknikal otomatis (Support, Resistance, RSI, MACD, Bollinger Bands, Fibonacci) berdasarkan data historis.",
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "symbol": { "type": "STRING", "description": "Simbol saham." }
+                },
+                "required": ["symbol"]
+            }
+        },
+        {
+            "name": "get_market_sentiment",
+            "description": "Menganalisis sentimen pasar berdasarkan berita terbaru dari internet.",
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "symbol": { "type": "STRING", "description": "Simbol saham atau nama perusahaan." }
                 },
                 "required": ["symbol"]
             }
@@ -153,6 +198,7 @@ def chat_with_gemini(api_keys, history, user_message):
     }]
     
     for idx, api_key in enumerate(api_keys):
+        # ... (payload and request logic)
         for model_name in MODELS:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
             
@@ -194,16 +240,56 @@ def chat_with_gemini(api_keys, history, user_message):
                     elif function_name == 'get_stock_price':
                         symbol = args.get('symbol', '')
                         yield {"status": f"AI mencari harga di Yahoo Finance: '{symbol}'"}
-                        logging.info(f"AI (Chat - {model_name}) mencari harga di Yahoo Finance untuk: {symbol}")
+                        logging.info(f"AI mencari harga di Yahoo Finance untuk: {symbol}")
                         yf_result = get_stock_price(symbol)
                         
                         if "error" in yf_result:
                             yield {"status": "Yahoo Finance gagal. Mencoba fallback ke Bing..."}
-                            bing_query = f"harga saham {symbol} terkini"
-                            bing_search_result = search_bing(bing_query)
-                            tool_result = f"Gagal mendapatkan harga dari Yahoo Finance: {yf_result['error']}. Hasil pencarian Bing: {bing_search_result}"
+                            tool_result = search_bing(f"harga saham {symbol} terkini")
                         else:
                             tool_result = f"Harga {yf_result['symbol']} saat ini: {yf_result['price']} {yf_result['unit']} ({yf_result['change_percent']})"
+                    
+                    elif function_name == 'get_historical_stock_data':
+                        symbol = args.get('symbol', '')
+                        range_val = args.get('range', '3mo')
+                        yield {"status": f"AI menarik data historis {range_val} untuk {symbol}..."}
+                        from yahoo_finance_tool import get_historical_stock_data
+                        res = get_historical_stock_data(symbol, range_val)
+                        tool_result = json.dumps(res) if "error" not in res else res["error"]
+                        
+                    elif function_name == 'get_fundamental_data':
+                        symbol = args.get('symbol', '')
+                        yield {"status": f"AI menganalisis data fundamental {symbol}..."}
+                        from yahoo_finance_tool import get_fundamental_data
+                        res = get_fundamental_data(symbol)
+                        tool_result = json.dumps(res) if "error" not in res else res["error"]
+                        
+                    elif function_name == 'get_technical_analysis':
+                        symbol = args.get('symbol', '')
+                        yield {"status": f"AI menghitung indikator teknikal mendalam untuk {symbol}..."}
+                        from yahoo_finance_tool import get_historical_stock_data
+                        from formatter import calculate_rsi, calculate_ma, calculate_technical_indicators
+                        hist_data = get_historical_stock_data(symbol, "90d")
+                        if "error" in hist_data:
+                            tool_result = f"Gagal menghitung teknikal: {hist_data['error']}"
+                        else:
+                            prices = [d['close'] for d in hist_data['history']]
+                            rsi = calculate_rsi(prices)
+                            ma20 = calculate_ma(prices, 20)
+                            deep = calculate_technical_indicators(prices)
+                            tool_result = json.dumps({
+                                "symbol": symbol, "rsi": rsi, "ma20": ma20, "indicators": deep
+                            })
+                            
+                    elif function_name == 'get_market_sentiment':
+                        symbol = args.get('symbol', '')
+                        yield {"status": f"AI sedang meriset sentimen pasar untuk {symbol}..."}
+                        from news_scraper import scrape_news
+                        from scraper import get_driver
+                        driver = get_driver()
+                        news = scrape_news(symbol, driver)
+                        driver.quit()
+                        tool_result = json.dumps(news) if news else "Tidak ada berita ditemukan."
                     
                     current_history.append({"role": "model", "parts": [{"functionCall": function_call}]})
                     current_history.append({
