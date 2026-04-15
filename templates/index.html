@@ -208,7 +208,14 @@
         </div>
 
         <div class="sidebar-section">
-            <h3 class="section-title"><span class="material-icons-round">history</span> Riwayat Analisis</h3>
+            <h3 class="section-title">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="material-icons-round">history</span> Riwayat Analisis
+                </div>
+                <button id="btnClearHistory" class="btn-icon" style="margin-left: auto; padding: 2px; color: var(--sell);" title="Hapus Semua Riwayat">
+                    <span class="material-icons-round" style="font-size: 16px;">delete_sweep</span>
+                </button>
+            </h3>
             <ul id="recentAnalysesList" style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
                 <li style="font-size: 12px; color: var(--text-muted);">Belum ada riwayat.</li>
             </ul>
@@ -510,6 +517,14 @@
                 const data = JSON.parse(sessionStorage.getItem(`analysis_${symbol}`));
                 fetch('/api/chat/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol: symbol }) })
                 .then(() => restoreState(data));
+            }
+        });
+
+        document.getElementById('btnClearHistory').addEventListener('click', () => {
+            if (confirm('Hapus semua riwayat analisis?')) {
+                const keys = Object.keys(sessionStorage).filter(k => k.startsWith('analysis_'));
+                keys.forEach(key => sessionStorage.removeItem(key));
+                updateRecentAnalysesList();
             }
         });
 
