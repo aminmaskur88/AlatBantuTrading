@@ -256,7 +256,10 @@
                 </h3>
                 <div class="options-box" style="flex: 1; padding: 10px; display: flex; flex-direction: column;">
                     <div id="chatBox" class="chat-box">
-                        <div class="message bot-message">Halo! Ada yang ingin ditanyakan tentang saham ini?</div>
+                        <div class="message bot-message">
+                            <div style="font-size: 10px; opacity: 0.6; margin-bottom: 4px;">Sistem</div>
+                            Halo! Ada yang ingin ditanyakan tentang saham ini?
+                        </div>
                     </div>
                     <form id="chatForm" class="chat-input-row">
                         <input type="text" id="chatInput" class="input-box" placeholder="Ketik pesan..." style="padding: 8px;" autocomplete="off" spellcheck="false" autocorrect="off">
@@ -457,7 +460,11 @@
             if (data.chatHtml) {
                 chatBox.innerHTML = data.chatHtml;
             } else {
-                chatBox.innerHTML = '<div class="message bot-message">Halo! Ada yang ingin ditanyakan tentang saham ini?</div>';
+                chatBox.innerHTML = `
+                    <div class="message bot-message">
+                        <div style="font-size: 10px; opacity: 0.6; margin-bottom: 4px;">Sistem</div>
+                        Halo! Ada yang ingin ditanyakan tentang saham ini?
+                    </div>`;
             }
             
             loadTradingViewWidget(currentSymbol);
@@ -549,6 +556,17 @@
                         list.appendChild(li);
                     });
                 }
+            // Add a small notification in both chat boxes
+            const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            const updateMsg = document.createElement('div');
+            updateMsg.className = 'message bot-message';
+            updateMsg.style.background = 'var(--item-active)';
+            updateMsg.innerHTML = `<div style="font-size: 10px; opacity: 0.6; margin-bottom: 4px;">${now}</div>📰 Daftar berita telah diperbarui.`;
+            chatBox.appendChild(updateMsg);
+            largeChatBox.appendChild(updateMsg.cloneNode(true));
+            chatBox.scrollTop = chatBox.scrollHeight;
+            largeChatBox.scrollTop = largeChatBox.scrollHeight;
+            saveChatToSession();
             } finally { btn.disabled = false; btn.innerHTML = orig; }
         });
 
@@ -572,10 +590,15 @@
             const rawHistory = savedData ? savedData.rawHistory : null;
 
             const append = (msg, role, isStatus = false) => {
+                const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 const div = document.createElement('div');
                 div.className = `message ${role}-message`;
-                if (isStatus) { div.style.cssText = 'background:transparent; color:var(--text-muted); font-size:11px; font-style:italic; border:none; padding:4px 0;'; }
-                div.innerHTML = msg;
+                if (isStatus) { 
+                    div.style.cssText = 'background:transparent; color:var(--text-muted); font-size:11px; font-style:italic; border:none; padding:4px 0;';
+                    div.innerHTML = msg;
+                } else {
+                    div.innerHTML = `<div style="font-size: 10px; opacity: 0.6; margin-bottom: 4px;">${now}</div>${msg}`;
+                }
                 chatBox.appendChild(div.cloneNode(true));
                 largeChatBox.appendChild(div);
                 chatBox.scrollTop = chatBox.scrollHeight;
@@ -612,9 +635,11 @@
                             if (data.done) {
                                 statusEls.forEach(el => el.remove());
                                 if (data.reply) {
+                                    const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                                     const div = document.createElement('div');
                                     div.className = 'message bot-message';
-                                    div.innerHTML = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                                    const formatted = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                                    div.innerHTML = `<div style="font-size: 10px; opacity: 0.6; margin-bottom: 4px;">${now}</div>${formatted}`;
                                     chatBox.appendChild(div.cloneNode(true));
                                     largeChatBox.appendChild(div);
                                     
