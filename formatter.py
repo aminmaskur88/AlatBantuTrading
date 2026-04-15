@@ -54,6 +54,42 @@ def calculate_ma(prices, period=20):
         return None
     return sum(prices[-period:]) / period
 
+def calculate_technical_indicators(prices):
+    if len(prices) < 20:
+        return {}
+    
+    # 1. Support & Resistance (Pivot Points approximation)
+    high = max(prices[-20:])
+    low = min(prices[-20:])
+    close = prices[-1]
+    pivot = (high + low + close) / 3
+    s1 = (2 * pivot) - high
+    r1 = (2 * pivot) - low
+    s2 = pivot - (high - low)
+    r2 = pivot + (high - low)
+
+    # 2. Bollinger Bands (20, 2)
+    ma20 = calculate_ma(prices, 20)
+    variance = sum([(p - ma20)**2 for p in prices[-20:]]) / 20
+    std_dev = variance**0.5
+    upper_band = ma20 + (std_dev * 2)
+    lower_band = ma20 - (std_dev * 2)
+
+    # 3. MACD (Simplified)
+    ema12 = sum(prices[-12:]) / 12 # Approximation
+    ema26 = sum(prices[-26:]) / 26 # Approximation
+    macd_line = ema12 - ema26
+    
+    return {
+        "support_1": round(s1, 2),
+        "resistance_1": round(r1, 2),
+        "support_2": round(s2, 2),
+        "resistance_2": round(r2, 2),
+        "bb_upper": round(upper_band, 2),
+        "bb_lower": round(lower_band, 2),
+        "macd": round(macd_line, 2)
+    }
+
 def clean_data(raw_data):
     clean = raw_data.copy()
     
@@ -118,6 +154,10 @@ def enrich_data(clean_data):
                 enriched['ma_signal'] = 'Bearish (Dibawah MA20)'
             else:
                 enriched['ma_signal'] = 'Netral'
+        
+        # Add deep technical indicators
+        deep_tech = calculate_technical_indicators(history)
+        enriched.update(deep_tech)
 
     # Basic Sentiment logic from news
     positive_words = ['naik', 'untung', 'laba', 'growth', 'buy', 'positive', 'surge', 'jump', 'dividend', 'profit', 'bullish', 'optimis', 'meningkat', 'ekspansi', 'akuisisi', 'rekor', 'prospek']

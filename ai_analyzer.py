@@ -3,6 +3,7 @@ import logging
 import requests
 import time
 from bing_search_tool import search_bing
+from yahoo_finance_tool import get_stock_price # New import
 from utils import move_key_to_bottom
 
 # Model fallback list for robustness
@@ -26,16 +27,22 @@ def analyze_with_gemini(api_keys, data):
         holdings_str += "Tolong pertimbangkan kepemilikan user saat ini (profit/loss) dalam memberikan analisis dan rekomendasi.\n"
     
     prompt = f"""
-    Kamu adalah analis keuangan dan pasar modal profesional.
-    Berikut adalah data pasar, indikator teknikal, dan berita terbaru untuk aset {data['symbol']}:
+    Kamu adalah analis keuangan dan pasar modal profesional dengan keahlian khusus dalam Analisis Teknikal Mendalam.
+    Berikut adalah data pasar, indikator teknikal (90 hari terakhir), dan berita terbaru untuk aset {data['symbol']}:
     
-    Data Harga & Teknikal:
-    - Harga Saat Ini: {data.get('price')}
-    - Perubahan: {data.get('change')}% 
-    - Tren Pasar: {data.get('market_trend')}
+    Data Harga & Indikator Utama:
+    - Harga Saat Ini: {data.get('price')} ({data.get('change')}% )
+    - Tren: {data.get('market_trend')}
     - RSI (14): {data.get('rsi')} ({data.get('rsi_desc')})
     - Moving Average (20): {data.get('ma20')} ({data.get('ma_signal')})
-    - Sentimen Berita: {data.get('sentiment')}
+    
+    Analisis Teknikal Mendalam:
+    - Support 1: {data.get('support_1')} | Support 2: {data.get('support_2')}
+    - Resistance 1: {data.get('resistance_1')} | Resistance 2: {data.get('resistance_2')}
+    - Bollinger Bands: Upper {data.get('bb_upper')} | Lower {data.get('bb_lower')}
+    - MACD Line: {data.get('macd')}
+    
+    Data Historis Close (90 hari): {json.dumps(data.get('history', [])[-30:])} (ditampilkan 30 hari terakhir)
     
     {holdings_str} 
     
@@ -43,21 +50,22 @@ def analyze_with_gemini(api_keys, data):
     {json.dumps(data.get('news', []), indent=2, ensure_ascii=False)}
     
     Tugas Anda:
-    1. Berikan analisis singkat yang menggabungkan data teknikal (RSI, MA) dan sentimen berita.
-    2. Berikan rekomendasi (BUY / HOLD / SELL).
-    3. Berikan alasan yang kuat berdasarkan indikator teknikal dan fundamental/berita.
-    4. Berikan angka spesifik untuk: Harga Beli (Entry), Harga Target Penjualan (Target/TP), dan Harga Jual Rugi (Cut Loss/CL).
+    1. Lakukan Analisis Teknikal Mendalam: Identifikasi pola harga, breakout, serta kekuatan support/resistance yang ada.
+    2. Gabungkan dengan analisis sentimen dari berita terbaru.
+    3. Berikan rekomendasi (BUY / HOLD / SELL).
+    4. Berikan alasan yang sangat spesifik berdasarkan angka-angka indikator di atas.
+    5. Berikan angka presisi untuk: Harga Beli (Entry), Target Penjualan (TP), dan Cut Loss (CL).
     
     PENTING: Format output Anda WAJIB berupa JSON murni dengan struktur berikut:
     {{
-        "analysis": "Penjelasan singkat",
+        "analysis": "Penjelasan analisis mendalam (teknikal + fundamental)",
         "signal": "BUY",
-        "reason": "Alasan rekomendasi",
+        "reason": "Alasan teknis spesifik (misal: memantul di support X atau breakout pola Y)",
         "entry_price": "1000",
         "target_price": "1200",
         "cut_loss_price": "950"
     }}
-    Pastikan tidak ada teks lain selain JSON yang valid. Outputkan string JSON saja.
+    Pastikan tidak ada teks lain selain JSON yang valid.
     """
     
     payload = {
@@ -121,7 +129,22 @@ def chat_with_gemini(api_keys, history, user_message):
                 },
                 "required": ["query"]
             }
-        }]
+        },
+        {
+            "name": "get_stock_price",
+            "description": "Mengambil harga saham terkini untuk simbol saham tertentu dari Yahoo Finance. Gunakan ini khusus untuk mendapatkan harga real-time, misal 'harga BBCA sekarang'. Simbol saham Indonesia biasanya diakhiri dengan '.JK' (misal: 'BBCA.JK'), pastikan format ini jika mencari saham Indonesia. Jika user menyebutkan nama perusahaan Indonesia tanpa '.JK', tambahkan secara otomatis.",
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "symbol": {
+                        "type": "STRING",
+                        "description": "Simbol saham yang akan dicari, contoh: 'BBCA.JK', 'AAPL', 'MSFT'."
+                    }
+                },
+                "required": ["symbol"]
+            }
+        }
+        ]
     }]
     
     for idx, api_key in enumerate(api_keys):
@@ -136,13 +159,16 @@ def chat_with_gemini(api_keys, history, user_message):
             }
             
             try:
+                yield {"status": "AI sedang berpikir..."}
                 response = requests.post(url, headers=headers, json=payload, timeout=60)
                 
                 if response.status_code == 429:
                     move_key_to_bottom(api_key)
+                    yield {"status": "API Key limit. Mencoba Key lain..."}
                     break
                 
                 if response.status_code == 503:
+                    yield {"status": "Model sibuk. Mencoba model lain..."}
                     continue
                 
                 response.raise_for_status()
@@ -151,24 +177,44 @@ def chat_with_gemini(api_keys, history, user_message):
                 
                 if 'functionCall' in part:
                     function_call = part['functionCall']
-                    query = function_call.get('args', {}).get('query', '')
-                    logging.info(f"AI (Chat - {model_name}) mencari: {query}")
+                    function_name = function_call.get('name', '')
+                    args = function_call.get('args', {})
+                    
+                    tool_result = ""
+                    if function_name == 'search_bing':
+                        query = args.get('query', '')
+                        yield {"status": f"AI menggunakan Bing Search: '{query}'"}
+                        logging.info(f"AI (Chat - {model_name}) mencari Bing: {query}")
+                        tool_result = search_bing(query)
+                    elif function_name == 'get_stock_price':
+                        symbol = args.get('symbol', '')
+                        yield {"status": f"AI mencari harga di Yahoo Finance: '{symbol}'"}
+                        logging.info(f"AI (Chat - {model_name}) mencari harga di Yahoo Finance untuk: {symbol}")
+                        yf_result = get_stock_price(symbol)
+                        
+                        if "error" in yf_result:
+                            yield {"status": "Yahoo Finance gagal. Mencoba fallback ke Bing..."}
+                            bing_query = f"harga saham {symbol} terkini"
+                            bing_search_result = search_bing(bing_query)
+                            tool_result = f"Gagal mendapatkan harga dari Yahoo Finance: {yf_result['error']}. Hasil pencarian Bing: {bing_search_result}"
+                        else:
+                            tool_result = f"Harga {yf_result['symbol']} saat ini: {yf_result['price']} {yf_result['unit']} ({yf_result['change_percent']})"
                     
                     current_history.append({"role": "model", "parts": [{"functionCall": function_call}]})
-                    search_result = search_bing(query)
                     current_history.append({
                         "role": "function",
                         "parts": [
                             {
                                 "functionResponse": {
-                                    "name": "search_bing",
-                                    "response": {"result": search_result}
+                                    "name": function_name,
+                                    "response": {"result": tool_result}
                                 }
                             }
                         ]
                     })
                     
                     payload["contents"] = current_history
+                    yield {"status": "AI memproses hasil pencarian..."}
                     response = requests.post(url, headers=headers, json=payload, timeout=60)
                     response.raise_for_status()
                     result = response.json()
@@ -176,10 +222,12 @@ def chat_with_gemini(api_keys, history, user_message):
                 
                 ai_reply = part.get('text', '').strip()
                 updated_history = current_history + [{"role": "model", "parts": [{"text": ai_reply}]}]
-                return ai_reply, updated_history
+                yield {"reply": ai_reply, "history": updated_history}
+                return
                 
             except Exception as e:
                 logging.warning(f"Error chat dengan {model_name} Key {idx+1}: {e}")
+                yield {"status": f"Terjadi kendala teknis. Mencoba ulang..."}
                 continue
                 
-    return "Maaf, terjadi kesalahan pada semua model dan API Key.", history
+    yield {"reply": "Maaf, terjadi kesalahan pada semua model dan API Key.", "history": current_history}

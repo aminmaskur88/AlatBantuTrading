@@ -145,7 +145,8 @@ def scrape_stock_data(symbol, driver_not_used=None, is_indo=False):
     
     for current_symbol in symbols_to_try:
         try:
-            url = f"https://query1.finance.yahoo.com/v8/finance/chart/{current_symbol}?interval=1d&range=30d"
+            # Increase range to 90 days for better technical analysis
+            url = f"https://query1.finance.yahoo.com/v8/finance/chart/{current_symbol}?interval=1d&range=90d"
             response = requests.get(url, headers=headers, timeout=10)
             
             if response.status_code == 404:

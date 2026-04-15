@@ -252,6 +252,18 @@
                 </div>
             </div>
             
+            <div class="sidebar-section">
+                <h3 class="section-title"><span class="material-icons-round">analytics</span> Indikator Teknikal</h3>
+                <div class="options-box">
+                    <div class="data-row"><span class="data-label">Support 1:</span><span class="data-value" id="resS1"></span></div>
+                    <div class="data-row"><span class="data-label">Resistance 1:</span><span class="data-value" id="resR1"></span></div>
+                    <div style="margin: 8px 0; border-top: 1px solid var(--border-color); opacity: 0.5;"></div>
+                    <div class="data-row"><span class="data-label">BB Upper:</span><span class="data-value" id="resBBU"></span></div>
+                    <div class="data-row"><span class="data-label">BB Lower:</span><span class="data-value" id="resBBL"></span></div>
+                    <div class="data-row"><span class="data-label">MACD:</span><span class="data-value" id="resMACD"></span></div>
+                </div>
+            </div>
+
             <div class="sidebar-section" style="flex: 1; display: flex; flex-direction: column;">
                 <h3 class="section-title">
                     <div style="display: flex; align-items: center; gap: 6px;">
@@ -438,6 +450,14 @@
 
             document.getElementById('resTrend').textContent = resData.market_trend || '-';
             document.getElementById('resSentiment').textContent = resData.sentiment || '-';
+
+            // Populate Deep Technical Indicators
+            const formatNum = (val) => (val === null || val === undefined || isNaN(parseFloat(val))) ? '-' : parseFloat(val).toLocaleString('id-ID');
+            document.getElementById('resS1').textContent = formatNum(resData.support_1);
+            document.getElementById('resR1').textContent = formatNum(resData.resistance_1);
+            document.getElementById('resBBU').textContent = formatNum(resData.bb_upper);
+            document.getElementById('resBBL').textContent = formatNum(resData.bb_lower);
+            document.getElementById('resMACD').textContent = formatNum(resData.macd);
 
             const signalBadge = document.getElementById('resSignal');
             signalBadge.textContent = aiRes.signal;
