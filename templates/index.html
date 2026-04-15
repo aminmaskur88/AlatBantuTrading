@@ -252,23 +252,6 @@
                 </div>
             </div>
             
-            <div class="sidebar-section">
-                <h3 class="section-title"><span class="material-icons-round">analytics</span> Indikator Teknikal</h3>
-                <div class="options-box">
-                    <div class="data-row"><span class="data-label">Support 1:</span><span class="data-value" id="resS1"></span></div>
-                    <div class="data-row"><span class="data-label">Resistance 1:</span><span class="data-value" id="resR1"></span></div>
-                    <div style="margin: 8px 0; border-top: 1px solid var(--border-color); opacity: 0.5;"></div>
-                    <div class="data-row"><span class="data-label">BB Upper:</span><span class="data-value" id="resBBU"></span></div>
-                    <div class="data-row"><span class="data-label">BB Lower:</span><span class="data-value" id="resBBL"></span></div>
-                    <div class="data-row"><span class="data-label">MACD:</span><span class="data-value" id="resMACD"></span></div>
-                    <div style="margin: 8px 0; border-top: 1px solid var(--border-color); opacity: 0.5;"></div>
-                    <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">FIBONACCI (90D)</div>
-                    <div class="data-row"><span class="data-label">Fib 61.8%:</span><span class="data-value" id="resFib618"></span></div>
-                    <div class="data-row"><span class="data-label">Fib 50.0%:</span><span class="data-value" id="resFib500"></span></div>
-                    <div class="data-row"><span class="data-label">Fib 38.2%:</span><span class="data-value" id="resFib382"></span></div>
-                </div>
-            </div>
-
             <div class="sidebar-section" style="flex: 1; display: flex; flex-direction: column;">
                 <h3 class="section-title">
                     <div style="display: flex; align-items: center; gap: 6px;">
@@ -315,6 +298,30 @@
             <div class="panel-card" style="padding: 0; overflow: hidden; flex-shrink: 0; border-radius: 12px; display: flex; flex-direction: column;">
                 <div class="panel-header" style="padding: 12px 16px 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 0;"><span class="material-icons-round">stacked_line_chart</span> Grafik Teknikal Real-Time</div>
                 <div id="tradingview_chart" style="height: 450px; width: 100%; background: var(--canvas-bg);"></div>
+            </div>
+
+            <!-- Deep Technical Indicators Section -->
+            <div class="panel-card">
+                <div class="panel-header"><span class="material-icons-round">analytics</span> Indikator Teknikal Mendalam</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div class="options-box">
+                        <div class="section-title" style="margin-bottom: 10px;">Support & Resistance</div>
+                        <div class="data-row"><span class="data-label">Support 1:</span><span class="data-value" id="resS1"></span></div>
+                        <div class="data-row"><span class="data-label">Resistance 1:</span><span class="data-value" id="resR1"></span></div>
+                    </div>
+                    <div class="options-box">
+                        <div class="section-title" style="margin-bottom: 10px;">Momentum & Trend</div>
+                        <div class="data-row"><span class="data-label">BB Upper:</span><span class="data-value" id="resBBU"></span></div>
+                        <div class="data-row"><span class="data-label">BB Lower:</span><span class="data-value" id="resBBL"></span></div>
+                        <div class="data-row"><span class="data-label">MACD Line:</span><span class="data-value" id="resMACD"></span></div>
+                    </div>
+                    <div class="options-box">
+                        <div class="section-title" style="margin-bottom: 10px;">Fibonacci (90D)</div>
+                        <div class="data-row"><span class="data-label">Fib 61.8%:</span><span class="data-value" id="resFib618"></span></div>
+                        <div class="data-row"><span class="data-label">Fib 50.0%:</span><span class="data-value" id="resFib500"></span></div>
+                        <div class="data-row"><span class="data-label">Fib 38.2%:</span><span class="data-value" id="resFib382"></span></div>
+                    </div>
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
