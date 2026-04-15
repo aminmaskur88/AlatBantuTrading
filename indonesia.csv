@@ -1,0 +1,864 @@
+name,ticker,market,sector
+Pt Adaro Andalan Indonesia Tbk,AADI,IDX,Energy minerals
+PT Astra Agro Lestari Tbk,AALI,IDX,Process industries
+PT Mahaka Media Tbk,ABBA,IDX,Consumer services
+PT Asuransi Bina Dana Arta Tbk Class A,ABDA,IDX,Finance
+PT ABM Investama Tbk,ABMM,IDX,Energy minerals
+PT Aspirasi Hidup Indonesia Tbk,ACES,IDX,Retail trade
+PT Samcro Hyosung Adilestari Tbk Class A,ACRO,IDX,Process industries
+PT Acset Indonusa Tbk,ACST,IDX,Industrial services
+PT Adhi Commuter Properti Tbk,ADCP,IDX,Finance
+PT Akasha Wira International Tbk,ADES,IDX,Consumer non-durables
+PT Adhi Karya (Persero) Tbk,ADHI,IDX,Industrial services
+PT Adira Dinamika Multi Finance Tbk,ADMF,IDX,Finance
+PT Polychem Indonesia Tbk,ADMG,IDX,Process industries
+PT Alamtri Minerals Indonesia Tbk,ADMR,IDX,Energy minerals
+PT Alamtri Resources Indonesia Tbk,ADRO,IDX,Energy minerals
+PT Anugerah Spareparts Sejahtera Tbk,AEGS,IDX,Producer manufacturing
+PT Asia Sejahtera Mina Tbk,AGAR,IDX,Distribution services
+PT Samator Indo Gas Tbk,AGII,IDX,Process industries
+PT Bank Raya Indonesia Tbk,AGRO,IDX,Finance
+PT Bank IBK Indonesia Tbk,AGRS,IDX,Finance
+PT Asuransi Harta Aman Pratama Tbk,AHAP,IDX,Finance
+PT Artha Mahiya Investama Tbk,AIMS,IDX,Distribution services
+PT FKS Food Sejahtera Tbk Class A,AISA,IDX,Consumer non-durables
+PT Argha Karya Prima Industry Tbk,AKPI,IDX,Process industries
+PT AKR Corporindo Tbk,AKRA,IDX,Distribution services
+PT Mineral Sumberdaya Mandiri Tbk,AKSI,IDX,Finance
+PT Alkindo Naratama Tbk,ALDO,IDX,Process industries
+PT Ancara Logistics Indonesia Tbk,ALII,IDX,Consumer services
+"PT Alakasa Industrindo, Tbk Class A",ALKA,IDX,Non-energy minerals
+PT Asuransi Multi Artha Guna Tbk,AMAG,IDX,Finance
+PT Makmur Berkah Amanda Tbk,AMAN,IDX,Finance
+PT Bank Amar Indonesia Tbk,AMAR,IDX,Finance
+PT Asahimas Flat Glass Tbk,AMFG,IDX,Process industries
+PT Ateliers Mecaniques D'Indonesie Tbk,AMIN,IDX,Producer manufacturing
+PT Amman Mineral Internasional Tbk,AMMN,IDX,Non-energy minerals
+PT Agung Menjangan Mas Tbk,AMMS,IDX,Process industries
+PT Ashmore Asset Management Indonesia Tbk,AMOR,IDX,Finance
+PT Sumber Alfaria Trijaya,AMRT,IDX,Retail trade
+PT Andira Agro Tbk,ANDI,IDX,Process industries
+PT Austindo Nusantara Jaya Tbk,ANJT,IDX,Process industries
+PT Aneka Tambang Tbk,ANTM,IDX,Non-energy minerals
+PT Apexindo Pratama Duta Tbk,APEX,IDX,Industrial services
+PT Pacific Strategic Financial Tbk Class A,APIC,IDX,Finance
+PT Arita Prima Indonesia Tbk,APII,IDX,Producer manufacturing
+PT Asiaplast Industries Tbk,APLI,IDX,Process industries
+PT Agung Podomoro Land Tbk,APLN,IDX,Finance
+PT Archi Indonesia Tbk,ARCI,IDX,Non-energy minerals
+PT Dunia Virtual Online Tbk,AREA,IDX,Technology services
+PT Argo Pantes Tbk,ARGO,IDX,Process industries
+PT Atlas Resources Tbk,ARII,IDX,Energy minerals
+PT Arkha Jayanti Persada Tbk,ARKA,IDX,Transportation
+PT Arkora Hydro Tbk,ARKO,IDX,Industrial services
+PT Arwana Citramulia Tbk,ARNA,IDX,Producer manufacturing
+PT Arthavest Tbk,ARTA,IDX,Consumer services
+PT Bank Jago Tbk,ARTO,IDX,Finance
+PT Asuransi Bintang Tbk,ASBI,IDX,Finance
+PT Asuransi Dayin Mitra Tbk,ASDM,IDX,Finance
+PT Astra Graphia Tbk,ASGR,IDX,Technology services
+PT Cilacap Samudera Fishing Industry Tbk,ASHA,IDX,Process industries
+PT Astra International Tbk,ASII,IDX,Technology services
+PT Asuransi Jasa Tania Tbk,ASJT,IDX,Finance
+PT Autopedia Sukses Lestari Tbk,ASLC,IDX,Distribution services
+PT Asuransi Maximus Graha Persada Tbk,ASMI,IDX,Finance
+PT Andalan Sakti Primaindo Tbk,ASPI,IDX,Finance
+PT Asia Pramulia Tbk,ASPR,IDX,Producer manufacturing
+PT Alam Sutera Realty Tbk,ASRI,IDX,Finance
+PT Asuransi Ramayana Tbk,ASRM,IDX,Finance
+PT Adi Sarana Armada Tbk,ASSA,IDX,Transportation
+PT Trimitra Prawara Goldland Tbk,ATAP,IDX,Finance
+PT Anabatic Technologies Tbk,ATIC,IDX,Technology services
+PT Atlantis Subsea Indonesia Tbk,ATLA,IDX,Industrial services
+PT Astra Otoparts Tbk,AUTO,IDX,Producer manufacturing
+PT Avia Avian Tbk,AVIA,IDX,Process industries
+PT Era Digital Media Tbk,AWAN,IDX,Technology services
+PT Tera Data Indonusa Tbk,AXIO,IDX,Electronic technology
+PT Janu Putra Sejahtera Tbk,AYAM,IDX,Process industries
+PT Agro Yasa Lestari Tbk,AYLS,IDX,Process industries
+PT Bank MNC Internasional Tbk,BABP,IDX,Finance
+PT Multitrend Indo Tbk,BABY,IDX,Retail trade
+PT Bank Capital Indonesia Tbk,BACA,IDX,Finance
+PT Bersama Mencapai Puncak Tbk,BAIK,IDX,Consumer services
+PT Saranacentral Bajatama Tbk,BAJA,IDX,Non-energy minerals
+PT Bali Towerindo Sentra Tbk,BALI,IDX,Industrial services
+PT Bank Aladin Syariah Tbk,BANK,IDX,Finance
+PT Bekasi Asri Pemula Tbk,BAPA,IDX,Consumer durables
+PT Bhakti Agung Propertindo Tbk,BAPI,IDX,Finance
+PT Sepatu Bata Tbk,BATA,IDX,Consumer non-durables
+PT Benteng Api Technic Tbk,BATR,IDX,Non-energy minerals
+PT Mitra Angkasa Sejahtera Tbk,BAUT,IDX,Distribution services
+PT Bayu Buana Tbk,BAYU,IDX,Consumer services
+PT Bank Central Asia Tbk,BBCA,IDX,Finance
+PT Allo Bank Indonesia Tbk,BBHI,IDX,Finance
+PT Bank KB Indonesia Tbk Class B,BBKP,IDX,Finance
+PT Buana Finance Tbk,BBLD,IDX,Finance
+PT Bank Mestika Dharma Tbk,BBMD,IDX,Finance
+PT Bank Negara Indonesia (Persero) Tbk Class B,BBNI,IDX,Finance
+PT Bank Rakyat Indonesia (Persero) Tbk Class B,BBRI,IDX,Finance
+PT Pelayaran Nasional Bina Buana Raya Tbk,BBRM,IDX,Transportation
+PT Krom Bank Indonesia Tbk,BBSI,IDX,Finance
+PT Bumi Benowo Sukses Sejahtera Tbk,BBSS,IDX,Industrial services
+PT Bank Tabungan Negara (Persero) Tbk,BBTN,IDX,Finance
+PT Bank Neo Commerce Tbk,BBYB,IDX,Finance
+PT MNC Kapital Indonesia Tbk,BCAP,IDX,Finance
+PT Bumi Citra Permai Tbk,BCIP,IDX,Finance
+PT Berdikari Pondasi Perkasa Tbk,BDKR,IDX,Industrial services
+PT Bank Danamon Indonesia Tbk Class A,BDMN,IDX,Finance
+PT Estika Tata Tiara Tbk,BEEF,IDX,Consumer non-durables
+PT Jobubu Jarum Minahasa Tbk,BEER,IDX,Consumer non-durables
+PT Bank Pembangunan Daerah Banten (Perseroda) Tbk Class A,BEKS,IDX,Finance
+PT Global Digital Niaga Tbk,BELI,IDX,Retail trade
+PT Trisula Textile Industries Tbk,BELL,IDX,Consumer non-durables
+PT Batulicin Nusantara Maritim Tbk,BESS,IDX,Transportation
+PT Bekasi Fajar Industrial Estate Tbk,BEST,IDX,Industrial services
+PT BFI Finance Indonesia Tbk,BFIN,IDX,Finance
+PT Bank Ganesha Tbk,BGTG,IDX,Finance
+PT Bhakti Multi Artha Tbk,BHAT,IDX,Commercial services
+PT MNC Asia Holding Tbk,BHIT,IDX,Consumer services
+PT Sepeda Bersama Indonesia Tbk,BIKE,IDX,Distribution services
+PT Primarindo Asia Infrastructure Tbk,BIMA,IDX,Consumer non-durables
+PT Bank Ina Perdana Tbk,BINA,IDX,Finance
+PT Perma Plasindo Tbk,BINO,IDX,Producer manufacturing
+PT Astrindo Nusantara Infrastruktur Tbk,BIPI,IDX,Energy minerals
+PT Bhuwanatala Indah Permai Tbk Class A,BIPP,IDX,Finance
+PT Blue Bird Tbk,BIRD,IDX,Transportation
+PT BISI International Tbk,BISI,IDX,Process industries
+PT Bank Pembangunan Daerah Jawa Barat & Banten Tbk,BJBR,IDX,Finance
+PT Bank Pembangunan Daerah Jawa Timur Tbk Class B,BJTM,IDX,Finance
+PT Bukit Darmo Property Tbk,BKDP,IDX,Finance
+PT Sentul City Tbk,BKSL,IDX,Finance
+PT Bank QNB Indonesia Tbk,BKSW,IDX,Finance
+PT Superior Prima Sukses Tbk,BLES,IDX,Non-energy minerals
+PT Trimitra Trans Persada Tbk,BLOG,IDX,Transportation
+PT Berlian Laju Tanker Tbk,BLTA,IDX,Transportation
+PT Graha Layar Prima Tbk Class C,BLTZ,IDX,Consumer services
+PT Berkah Prima Perkasa Tbk,BLUE,IDX,Distribution services
+PT Bank Maspion Indonesia Tbk,BMAS,IDX,Finance
+PT Lavender Bina Cendikia Tbk,BMBL,IDX,Commercial services
+PT Bundamedik Tbk,BMHS,IDX,Health services
+PT Bank Mandiri (Persero) Tbk,BMRI,IDX,Finance
+PT Bintang Mitra Semestaraya Tbk,BMSR,IDX,Distribution services
+PT Global Mediacom Tbk,BMTR,IDX,Consumer services
+PT Bank Bumi Arta Tbk,BNBA,IDX,Finance
+PT Bakrie & Brothers Tbk Class A,BNBR,IDX,Industrial services
+PT Bank CIMB Niaga Tbk Class A,BNGA,IDX,Finance
+PT Bank Maybank Indonesia Tbk Class A,BNII,IDX,Finance
+PT Bank Permata Tbk Class A,BNLI,IDX,Finance
+PT Newport Marine Services Tbk,BOAT,IDX,Transportation
+PT Formosa Ingredient Factory Tbk,BOBA,IDX,Consumer non-durables
+PT Bintang Oto Global Tbk,BOGA,IDX,Retail trade
+PT Bali Bintang Sejahtera Tbk,BOLA,IDX,Consumer services
+PT Garuda Metalindo Tbk,BOLT,IDX,Producer manufacturing
+PT Woori Finance Indonesia Tbk,BPFI,IDX,Finance
+PT Batavia Prosperindo Internasional Tbk,BPII,IDX,Commercial services
+PT Batavia Prosperindo Trans Tbk,BPTR,IDX,Finance
+PT Indo Kordsa Tbk,BRAM,IDX,Process industries
+PT Barito Renewables Energy Tbk,BREN,IDX,Utilities
+PT Bank Syariah Indonesia Tbk,BRIS,IDX,Finance
+PT Bumi Resources Minerals Tbk Class A,BRMS,IDX,Non-energy minerals
+PT Berlina Tbk,BRNA,IDX,Process industries
+PT Barito Pacific Tbk,BRPT,IDX,Non-energy minerals
+PT Raja Roti Cemerlang Tbk,BRRC,IDX,Consumer non-durables
+PT Wulandari Bangun Laksana Tbk,BSBK,IDX,Finance
+PT Bumi Serpong Damai Tbk,BSDE,IDX,Finance
+PT Bank Sinarmas Tbk,BSIM,IDX,Finance
+PT Bintang Samudera Mandiri Lines Tbk,BSML,IDX,Transportation
+PT Baramulti Suksessarana Tbk,BSSR,IDX,Energy minerals
+PT Bank of India Indonesia Tbk,BSWD,IDX,Finance
+PT Bumi Teknokultura Unggul Tbk,BTEK,IDX,Process industries
+PT Betonjaya Manunggal Tbk,BTON,IDX,Non-energy minerals
+PT Bank SMBC Indonesia Tbk,BTPN,IDX,Finance
+PT Bank BTPN Syariah Tbk,BTPS,IDX,Finance
+PT Segar Kumala Indonesia Tbk,BUAH,IDX,Distribution services
+PT Budi Starch & Sweetener Tbk,BUDI,IDX,Process industries
+PT Bukalapak.com Tbk,BUKA,IDX,Retail trade
+PT Bukaka Teknik Utama Tbk,BUKK,IDX,Producer manufacturing
+PT Buana Lintas Lautan Tbk,BULL,IDX,Transportation
+PT Bumi Resources Tbk Class A,BUMI,IDX,Energy minerals
+PT Bukit Uluwatu Villa Tbk,BUVA,IDX,Consumer services
+PT Bank Victoria International Tbk,BVIC,IDX,Finance
+PT Eagle High Plantations Tbk.,BWPT,IDX,Process industries
+PT Bayan Resources Tbk,BYAN,IDX,Energy minerals
+PT Cahayaputra Asa Keramik Tbk,CAKK,IDX,Consumer durables
+PT Campina Ice Cream Industry Tbk,CAMP,IDX,Consumer non-durables
+PT Capitol Nusantara Indonesia Tbk,CANI,IDX,Transportation
+PT Metro Healthcare Indonesia Tbk,CARE,IDX,Health services
+PT Industri dan Perdagangan Bintraco Dharma Tbk,CARS,IDX,Retail trade
+PT Capital Financial Indonesia Tbk,CASA,IDX,Finance
+PT.Cashlez Worldwide Indonesia Tbk,CASH,IDX,Technology services
+Cahaya Aero Services Tbk,CASS,IDX,Transportation
+PT Bangun Kosambi Sukses Tbk,CBDK,IDX,Finance
+PT Citra Buana Prasida Tbk,CBPE,IDX,Finance
+PT Cakra Buana Resources Energi Tbk,CBRE,IDX,Transportation
+PT Citra Borneo Utama Tbk,CBUT,IDX,Consumer non-durables
+PT Communication Cable Systems Indonesia Tbk,CCSI,IDX,Producer manufacturing
+PT Chandra Daya Investasi Tbk.,CDIA,IDX,Utilities
+PT Wilmar Cahaya Indonesia Tbk,CEKA,IDX,Consumer non-durables
+PT Centratama Telekomunikasi Indonesia Tbk,CENT,IDX,Communications
+PT Clipan Finance Indonesia Tbk,CFIN,IDX,Finance
+PT Citra Nusantara Gemilang Tbk,CGAS,IDX,Utilities
+PT Diastika Biotekindo Tbk,CHEK,IDX,Health technology
+PT Chemstar Indonesia Tbk,CHEM,IDX,Process industries
+PT Pelita Teknologi Global Tbk,CHIP,IDX,Technology services
+PT Chitose Internasional Tbk,CINT,IDX,Producer manufacturing
+PT Cita Mineral Investindo Tbk,CITA,IDX,Consumer durables
+PT Natura City Developments Tbk,CITY,IDX,Finance
+PT Citra Putra Realty Tbk,CLAY,IDX,Consumer services
+PT Sariguna Primatirta Tbk,CLEO,IDX,Consumer non-durables
+PT Colorpak Indonesia Tbk,CLPI,IDX,Process industries
+PT Citra Marga Nusaphala Persada Tbk,CMNP,IDX,Transportation
+PT Cemindo Gemilang Tbk,CMNT,IDX,Non-energy minerals
+PT AirAsia Indonesia Tbk,CMPP,IDX,Transportation
+PT Cisarua Mountain Dairy Tbk,CMRY,IDX,Distribution services
+PT Exploitasi Energi Indonesia Tbk Class A,CNKO,IDX,Energy minerals
+PT Nusantara Sejahtera Raya Tbk,CNMA,IDX,Consumer services
+PT Black Diamond Resources Tbk,COAL,IDX,Energy minerals
+PT Wahana Interfood Nusantara Tbk,COCO,IDX,Consumer non-durables
+PT Indokripto Koin Semesta Tbk,COIN,IDX,Miscellaneous
+PT Charoen Pokphand Indonesia Tbk,CPIN,IDX,Process industries
+PT Central Proteina Prima Tbk,CPRO,IDX,Process industries
+PT Toba Surimi Industries Tbk,CRAB,IDX,Consumer non-durables
+PT Carsurin Tbk,CRSN,IDX,Commercial services
+PT Catur Sentosa Adiprana Tbk,CSAP,IDX,Distribution services
+PT Cahayasakti Investindo Sukses Tbk,CSIS,IDX,Finance
+PT Cipta Selera Murni Tbk,CSMI,IDX,Consumer services
+PT Cisadane Sawit Raya Tbk,CSRA,IDX,Process industries
+PT Citra Tubindo Tbk,CTBN,IDX,Industrial services
+PT Ciputra Development Tbk,CTRA,IDX,Finance
+PT Citatah Tbk,CTTH,IDX,Non-energy minerals
+PT Petrindo Jaya Kreasi Tbk,CUAN,IDX,Non-energy minerals
+PT ITSEC Asia Tbk,CYBR,IDX,Technology services
+PT Daaz Bara Lestari Tbk,DAAZ,IDX,Distribution services
+PT Diamond Citra Propertindo Tbk,DADA,IDX,Finance
+PT Duta Anggada Realty Tbk,DART,IDX,Consumer durables
+PT Remala Abadi Tbk,DATA,IDX,Communications
+PT Duta Intidaya Tbk,DAYA,IDX,Retail trade
+PT DCI Indonesia Tbk,DCII,IDX,Technology services
+PT Danasupra Erapacific Tbk,DEFI,IDX,Finance
+PT Caturkarda Depo Bangunan Tbk,DEPO,IDX,Retail trade
+PT Darma Henwa Tbk,DEWA,IDX,Energy minerals
+PT Dewi Shri Farmindo Tbk,DEWI,IDX,Retail trade
+PT Dafam Property Indonesia Tbk,DFAM,IDX,Consumer services
+PT Nusa Konstruksi Enjiniring Tbk,DGIK,IDX,Industrial services
+PT Diagnos Laboratorium Utama Tbk,DGNS,IDX,Health services
+PT Delta Giri Wacana Tbk,DGWG,IDX,Process industries
+PT Arkadia Digital Media Tbk,DIGI,IDX,Technology services
+PT Intiland Development Tbk,DILD,IDX,Finance
+PT Distribusi Voucher Nusantara Tbk,DIVA,IDX,Technology services
+PT Central Omega Resources Tbk,DKFT,IDX,Non-energy minerals
+Pt Cipta Sarana Medika Tbk.,DKHH,IDX,Health services
+PT Delta Djakarta Tbk,DLTA,IDX,Consumer non-durables
+PT Puradelta Lestari Tbk,DMAS,IDX,Finance
+PT Digital Mediatama Maxima Tbk,DMMX,IDX,Commercial services
+PT Diamond Food Indonesia Tbk,DMND,IDX,Consumer non-durables
+PT Bank Oke Indonesia Tbk,DNAR,IDX,Finance
+PT Indoritel Makmur Internasional Tbk,DNET,IDX,Communications
+PT BUMA Internasional Grup Tbk,DOID,IDX,Energy minerals
+PT Era Media Sejahtera Tbk,DOOH,IDX,Commercial services
+PT Global Sukses Digital Tbk,DOSS,IDX,Retail trade
+PT Duta Pertiwi Nusantara Tbk,DPNS,IDX,Process industries
+PT Dua Putra Utama Makmur Tbk,DPUM,IDX,Distribution services
+PT Dharma Polimetal Tbk,DRMA,IDX,Producer manufacturing
+PT Dharma Samudera Fishing Industries Tbk,DSFI,IDX,Consumer non-durables
+PT Dharma Satya Nusantara Tbk,DSNG,IDX,Non-energy minerals
+PT Dian Swastatika Sentosa Tbk,DSSA,IDX,Energy minerals
+PT Duta Pertiwi Tbk,DUTI,IDX,Finance
+PT Darya-Varia Laboratoria Tbk,DVLA,IDX,Health technology
+PT Dwi Guna Laksana Tbk,DWGL,IDX,Energy minerals
+PT Dyandra Media International Tbk,DYAN,IDX,Commercial services
+PT Eastparc Hotel Tbk,EAST,IDX,Consumer services
+PT Electronic City Indonesia Tbk,ECII,IDX,Retail trade
+PT Indointernet Tbk,EDGE,IDX,Technology services
+PT Ekadharma International Tbk,EKAD,IDX,Process industries
+PT Data Sinergitama Jaya Tbk,ELIT,IDX,Technology services
+PT Pelayaran Nasional Ekalya Purnamasari Tbk,ELPI,IDX,Transportation
+PT Elnusa Tbk,ELSA,IDX,Energy minerals
+PT Bakrieland Development Tbk Class A,ELTY,IDX,Finance
+MERDEKA GOLD RESOURCES TBK,EMAS,IDX,Non-energy minerals
+PT Megapolitan Developments Tbk,EMDE,IDX,Finance
+PT Elang Mahkota Teknologi Tbk,EMTK,IDX,Consumer services
+PT Champ Resto Indonesia Tbk,ENAK,IDX,Consumer services
+PT Energi Mega Persada Tbk,ENRG,IDX,Energy minerals
+PT Morenzo Abadi Perkasa Tbk,ENZO,IDX,Consumer non-durables
+PT Megalestari Epack Sentosaraya Tbk,EPAC,IDX,Technology services
+PT Enseval Putera Megatrading Tbk,EPMT,IDX,Distribution services
+PT Erajaya Swasembada Tbk,ERAA,IDX,Distribution services
+PT Sinar Eka Selaras Tbk,ERAL,IDX,Retail trade
+PT Eratex Djaja Tbk,ERTX,IDX,Process industries
+PT Sinergi Inti Plastindo Tbk,ESIP,IDX,Producer manufacturing
+PT ESSA Industries Indonesia Tbk,ESSA,IDX,Energy minerals
+PT Esta Multi Usaha Tbk,ESTA,IDX,Consumer services
+PT Ever Shine Textile Tbk,ESTI,IDX,Process industries
+PT Estee Gold Feet Tbk,EURO,IDX,Consumer non-durables
+PT XLSMART Telecom Sejahtera Tbk,EXCL,IDX,Communications
+PT FAP Agri Tbk,FAPA,IDX,Consumer non-durables
+PT Fast Food Indonesia Tbk,FAST,IDX,Consumer services
+PT MD Entertainment Tbk,FILM,IDX,Consumer services
+PT Alfa Energi Investama Tbk,FIRE,IDX,Energy minerals
+PT FKS Multi Agro Tbk,FISH,IDX,Consumer non-durables
+PT Hotel Fitra International Tbk,FITT,IDX,Consumer services
+PT Falmaco Nonwoven Industri Tbk,FLMC,IDX,Process industries
+PT Fortune Mate Indonesia Tbk,FMII,IDX,Finance
+PT Multi Garam Utama Tbk,FOLK,IDX,Distribution services
+PT Sentra Food Indonesia Tbk,FOOD,IDX,Distribution services
+PT Fore Kopi Indonesia Tbk,FORE,IDX,Consumer services
+"PT Fortune Indonesia, Tbk",FORU,IDX,Commercial services
+PT Lotte Chemical Titan Tbk,FPNI,IDX,Process industries
+PT Fuji Finance Indonesia Tbk.,FUJI,IDX,Finance
+PT Futura Energi Global Tbk,FUTR,IDX,Commercial services
+PT Wijaya Cahaya Timber Tbk,FWCT,IDX,Non-energy minerals
+PT Gunawan Dianjaya Steel Tbk,GDST,IDX,Non-energy minerals
+PT Goodyear Indonesia Tbk,GDYR,IDX,Consumer durables
+PT Gema Grahasarana Tbk,GEMA,IDX,Producer manufacturing
+PT Golden Energy Mines Tbk,GEMS,IDX,Energy minerals
+PT Gudang Garam Tbk,GGRM,IDX,Consumer non-durables
+PT Gunung Raja Paksi Tbk,GGRP,IDX,Non-energy minerals
+PT Gihon Telekomunikasi Indonesia,GHON,IDX,Communications
+PT Garuda Indonesia (Persero) Tbk Class B,GIAA,IDX,Transportation
+PT Gajah Tunggal Tbk,GJTL,IDX,Consumer durables
+PT Globe Kita Terang Tbk,GLOB,IDX,Retail trade
+PT Galva Technologies Tbk,GLVA,IDX,Distribution services
+PT Garuda Maintenance Facility Aero Asia Tbk,GMFI,IDX,Transportation
+PT Gowa Makassar Tourism Development Tbk,GMTD,IDX,Finance
+PT Visi Telekomunikasi Infrastruktur Tbk,GOLD,IDX,Finance
+PT Intra Golflink Resorts Tbk,GOLF,IDX,Commercial services
+PT Garudafood Putra Putri Jaya Tbk,GOOD,IDX,Consumer non-durables
+PT GoTo Gojek Tokopedia Tbk,GOTO,IDX,Technology services
+PT Perdana Gapuraprima Tbk,GPRA,IDX,Consumer durables
+PT Geoprima Solusi Tbk,GPSO,IDX,Technology services
+PT Ingria Pratama Capitalindo Tbk,GRIA,IDX,Finance
+PT Griptha Putra Persada Tbk,GRPH,IDX,Consumer services
+PT Graha Prima Mentari Tbk,GRPM,IDX,Distribution services
+PT Equity Development Investment Tbk Class A,GSMF,IDX,Finance
+PT Garda Tujuh Buana Tbk,GTBO,IDX,Energy minerals
+PT Grahaprima Suksesmandiri Tbk,GTRA,IDX,Transportation
+PT GTS Internasional,GTSI,IDX,Transportation
+PT Aman Agrindo Tbk,GULA,IDX,Process industries
+PT Gunanusa Eramandiri Tbk,GUNA,IDX,Consumer non-durables
+PT Greenwood Sejahtera Tbk,GWSA,IDX,Finance
+PT Gozco Plantations Tbk,GZCO,IDX,Process industries
+PT Himalaya Energi Perkasa Tbk,HADE,IDX,Distribution services
+PT Hasnur Internasional Shipping Tbk,HAIS,IDX,Transportation
+PT Arsy Buana Travelindo Tbk,HAJJ,IDX,Consumer services
+PT Haloni Jane Tbk,HALO,IDX,Producer manufacturing
+PT Habco Trans Maritima Tbk,HATM,IDX,Transportation
+PT Minahasa Membangun Hebat Tbk,HBAT,IDX,Finance
+PT Radana Bhaskara Finance Tbk,HDFA,IDX,Finance
+PT Hensel Davest Indonesia Tbk,HDIT,IDX,Commercial services
+PT Medikaloka Hermina Tbk,HEAL,IDX,Health services
+PT Jaya Trishindo Tbk,HELI,IDX,Transportation
+PT DFI Retail Nusantara Tbk,HERO,IDX,Retail trade
+PT Hexindo Adiperkasa Tbk,HEXA,IDX,Distribution services
+PT Hero Global Investment Tbk,HGII,IDX,Utilities
+PT Hillcon Tbk,HILL,IDX,Non-energy minerals
+PT Hanjaya Mandala Sampoerna Tbk,HMSP,IDX,Consumer non-durables
+PT Buyung Poetra Sembada Tbk,HOKI,IDX,Process industries
+PT Grand House Mulia Tbk,HOMI,IDX,Finance
+PT Harapan Duta Pertiwi Tbk,HOPE,IDX,Producer manufacturing
+PT Menteng Heritage Realty Tbk,HRME,IDX,Consumer services
+PT Hartadinata Abadi Tbk,HRTA,IDX,Consumer durables
+PT Harum Energy Tbk,HRUM,IDX,Energy minerals
+PT Humpuss Maritim Internasional Tbk,HUMI,IDX,Transportation
+PT Ecocare Indo Pasifik Tbk,HYGN,IDX,Commercial services
+PT MNC Energy Investments Tbk,IATA,IDX,Distribution services
+PT Intan Baru Prana Tbk,IBFN,IDX,Finance
+PT Indo Boga Sukses Tbk,IBOS,IDX,Consumer services
+PT Inti Bangun Sejahtera Tbk,IBST,IDX,Industrial services
+PT Indofood CBP Sukses Makmur Tbk,ICBP,IDX,Consumer non-durables
+PT Island Concepts Indonesia Tbk,ICON,IDX,Consumer services
+PT Idea Indonesia Akademi Tbk,IDEA,IDX,Commercial services
+PT Indonesia Pondasi Raya Tbk,IDPR,IDX,Industrial services
+PT Indonesia Fibreboard Industry Tbk,IFII,IDX,Non-energy minerals
+PT Ifishdeco Tbk,IFSH,IDX,Non-energy minerals
+PT Champion Pacific Indonesia Tbk,IGAR,IDX,Process industries
+PT Intikeramik Alamasri Industri Tbk,IKAI,IDX,Producer manufacturing
+PT Era Mandiri Cemerlang Tbk,IKAN,IDX,Consumer non-durables
+PT Sumi Indo Kabel Tbk,IKBI,IDX,Electronic technology
+PT Ikapharmindo Putramas Tbk,IKPM,IDX,Health technology
+PT Indomobil Sukses Internasional Tbk,IMAS,IDX,Consumer durables
+PT Indomobil Multi Jasa Tbk,IMJS,IDX,Finance
+PT Impack Pratama Industri Tbk,IMPC,IDX,Producer manufacturing
+PT Indal Aluminium Industry Tbk,INAI,IDX,Non-energy minerals
+PT Indo Komoditi Korpora Tbk Class A,INCF,IDX,Producer manufacturing
+PT Intanwijaya Internasional Tbk,INCI,IDX,Process industries
+PT Vale Indonesia Tbk,INCO,IDX,Non-energy minerals
+PT Indofood Sukses Makmur Tbk,INDF,IDX,Consumer non-durables
+PT Royalindo Investa Wijaya Tbk,INDO,IDX,Finance
+PT Indo-Rama Synthetics Tbk,INDR,IDX,Process industries
+PT Indospring Tbk,INDS,IDX,Producer manufacturing
+PT Tanah Laut Tbk,INDX,IDX,Technology services
+PT Indika Energy Tbk,INDY,IDX,Energy minerals
+PT Sinergi Inti Andalan Prima Tbk,INET,IDX,Communications
+PT Indah Kiat Pulp & Paper Tbk,INKP,IDX,Process industries
+PT Inocycle Technology Group Tbk,INOV,IDX,Process industries
+PT Bank Artha Graha Internasional Tbk,INPC,IDX,Finance
+PT Indonesian Paradise Property Tbk,INPP,IDX,Consumer services
+PT Indah Prakasa Sentosa Tbk,INPS,IDX,Utilities
+PT Toba Pulp Lestari Tbk,INRU,IDX,Process industries
+PT Intraco Penta Tbk,INTA,IDX,Distribution services
+PT Inter-Delta Tbk,INTD,IDX,Consumer durables
+PT Indocement Tunggal Prakarsa Tbk,INTP,IDX,Non-energy minerals
+PT Sumber Sinergi Makmur Tbk,IOTF,IDX,Distribution services
+PT Era Graharealty Tbk,IPAC,IDX,Finance
+PT Indonesia Kendaraan Terminal Tbk,IPCC,IDX,Transportation
+PT Jasa Armada Indonesia Tbk,IPCM,IDX,Transportation
+PT Indopoly Swakarsa Industry Tbk,IPOL,IDX,Process industries
+PT MNC Vision Networks Tbk Class A,IPTV,IDX,Consumer services
+PT Itama Ranoraya Tbk,IRRA,IDX,Distribution services
+PT Aviana Sinar Abadi Tbk,IRSX,IDX,Technology services
+PT Isra Presisi Indonesia Tbk,ISAP,IDX,Producer manufacturing
+PT Indosat Tbk Class B,ISAT,IDX,Communications
+PT Indo American Seafoods Tbk,ISEA,IDX,Consumer non-durables
+PT Steel Pipe Industry of Indonesia Tbk,ISSP,IDX,Non-energy minerals
+PT Indonesian Tobacco Tbk,ITIC,IDX,Consumer non-durables
+PT Sumber Energi Andalan Tbk,ITMA,IDX,Energy minerals
+PT Indo Tambangraya Megah Tbk,ITMG,IDX,Energy minerals
+PT Jhonlin Agro Raya Tbk,JARR,IDX,Process industries
+PT Jasnita Telekomindo Tbk,JAST,IDX,Communications
+PT Informasi Teknologi Indonesia Tbk,JATI,IDX,Technology services
+PT Jaya Agra Wattie Tbk,JAWA,IDX,Process industries
+PT Armada Berjaya Trans Tbk,JAYA,IDX,Transportation
+PT Jembo Cable Co. Tbk,JECC,IDX,Producer manufacturing
+PT Graha Andrasentra Propertindo Tbk,JGLE,IDX,Finance
+PT Jakarta International Hotels & Development Tbk,JIHD,IDX,Finance
+PT Jaya Konstruksi Manggala Pratama Tbk,JKON,IDX,Industrial services
+PT Asuransi Jiwa Syariah Jasa Mitra Abadi Tbk,JMAS,IDX,Finance
+PT Japfa Comfeed Indonesia Tbk Class A,JPFA,IDX,Process industries
+PT Jaya Real Property Tbk,JRPT,IDX,Finance
+PT Jasa Marga (Persero) Tbk Class B,JSMR,IDX,Transportation
+PT Jakarta Setiabudi Internasional Tbk,JSPT,IDX,Consumer services
+PT Jasuindo Tiga Perkasa Tbk,JTPE,IDX,Commercial services
+PT Kimia Farma Tbk Class B,KAEF,IDX,Health technology
+PT Jantra Grupo Indonesia Tbk,KAQI,IDX,Consumer services
+PT Meratus Jasa Prima Tbk,KARW,IDX,Transportation
+PT Karya Bersama Anugerah Tbk,KBAG,IDX,Finance
+PT KMI Wire & Cable Tbk Class A,KBLI,IDX,Producer manufacturing
+PT Kabelindo Murni Tbk Class A,KBLM,IDX,Producer manufacturing
+PT First Media Tbk,KBLV,IDX,Consumer services
+PT Kedawung Setia Industrial Tbk,KDSI,IDX,Process industries
+PT Puri Sentul Permai Tbk,KDTN,IDX,Consumer services
+PT Kencana Energi Lestari Tbk,KEEN,IDX,Utilities
+PT Mulia Boga Raya Tbk,KEJU,IDX,Consumer non-durables
+PT Ketrosden Triasmitra Tbk,KETR,IDX,Industrial services
+PT Kedaung Indah Can Tbk,KICI,IDX,Consumer durables
+PT Kawasan Industri Jababeka Tbk Class A,KIJA,IDX,Finance
+PT Hoffmen Cleanindo Tbk,KING,IDX,Commercial services
+PT Kino Indonesia Tbk,KINO,IDX,Consumer non-durables
+PT Kioson Komersial Indonesia Tbk,KIOS,IDX,Retail trade
+PT Krida Jaringan Nusantara Tbk,KJEN,IDX,Transportation
+PT Kusuma Kemindo Sentosa Tbk,KKES,IDX,Distribution services
+PT Resource Alam Indonesia Tbk,KKGI,IDX,Energy minerals
+PT Pelayaran Kurnia Lautan Semesta Tbk,KLAS,IDX,Transportation
+PT Kalbe Farma Tbk,KLBF,IDX,Health technology
+PT Klinko Karya Imaji Tbk,KLIN,IDX,Consumer non-durables
+PT Kurniamitra Duta Sentosa Tbk,KMDS,IDX,Distribution services
+PT Kirana Megatara Tbk,KMTR,IDX,Producer manufacturing
+PT Kobexindo Tractors Tbk,KOBX,IDX,Distribution services
+PT Kokoh Exa Nusantara Tbk,KOCI,IDX,Finance
+PT Kokoh Inti Arebama Tbk,KOIN,IDX,Distribution services
+PT Koka Indonesia Tbk,KOKA,IDX,Industrial services
+PT Perdana Bangun Pusaka Tbk,KONI,IDX,Retail trade
+PT Mitra Energi Persada Tbk,KOPI,IDX,Distribution services
+PT DMS Propertindo Tbk,KOTA,IDX,Finance
+PT MNC Tourism Indonesia Tbk,KPIG,IDX,Finance
+PT Krakatau Steel (Persero) Tbk Class B,KRAS,IDX,Non-energy minerals
+PT Quantum Clovera Investama Tbk,KREN,IDX,Finance
+PT Bangun Karya Perkasa Jaya Tbk,KRYA,IDX,Producer manufacturing
+PT Kentanix Supra International Tbk,KSIX,IDX,Consumer durables
+PT Ace Oldfields Tbk,KUAS,IDX,Producer manufacturing
+PT UBC Medical Indonesia Tbk,LABS,IDX,Distribution services
+PT Jasa Berdikari Logistics Tbk,LAJU,IDX,Transportation
+PT Trimitra Propertindo Tbk,LAND,IDX,Consumer durables
+PT Leyand International Tbk,LAPD,IDX,Utilities
+PT LCK Global Kedaton Tbk,LCKM,IDX,Industrial services
+PT Logindo Samudramakmur Tbk,LEAD,IDX,Industrial services
+PT Imago Mulia Persada Tbk,LFLO,IDX,Commercial services
+PT MSIG Life Insurance Indonesia Tbk,LIFE,IDX,Finance
+PT Link Net Tbk,LINK,IDX,Communications
+PT Lion Metal Works Tbk,LION,IDX,Producer manufacturing
+PT Homeco Victoria Makmur Tbk,LIVE,IDX,Distribution services
+PT Lupromax Pelumas Indonesia Tbk,LMAX,IDX,Process industries
+PT Langgeng Makmur Industri Tbk,LMPI,IDX,Consumer durables
+PT Logisticsplus International Tbk,LOPI,IDX,Transportation
+PT Lippo Cikarang Tbk,LPCK,IDX,Finance
+PT Lippo General Insurance Tbk,LPGI,IDX,Finance
+PT Multi Prima Sejahtera Tbk,LPIN,IDX,Electronic technology
+PT Lippo Karawaci Tbk,LPKR,IDX,Finance
+PT Star Pacific Tbk Class A,LPLI,IDX,Technology services
+PT Matahari Department Store Tbk Class A,LPPF,IDX,Retail trade
+PT Lenox Pasifik InvestamaTbk Class A,LPPS,IDX,Finance
+PT Eka Sari Lorena Transport Tbk,LRNA,IDX,Transportation
+PT Perusahaan Perkebunan London Sumatra Indonesia Tbk,LSIP,IDX,Process industries
+PT Lautan Luas Tbk,LTLS,IDX,Distribution services
+PT Sentral Mitra Informatika Tbk,LUCK,IDX,Distribution services
+PT Lima Dua Lima Tiga Tbk,LUCY,IDX,Commercial services
+PT Mandiri Herindo Adiperkasa Tbk,MAHA,IDX,Energy minerals
+PT Malindo Feedmill Tbk,MAIN,IDX,Process industries
+PT Manggung Polahraya Tbk,MANG,IDX,Consumer durables
+PT MAP Aktif Adiperkasa Tbk,MAPA,IDX,Retail trade
+PT Map Boga Adiperkasa Tbk,MAPB,IDX,Consumer services
+PT Mitra Adiperkasa Tbk,MAPI,IDX,Retail trade
+PT Mahaka Radio Integra Tbk,MARI,IDX,Consumer services
+PT Mark Dynamics Indonesia Tbk,MARK,IDX,Non-energy minerals
+PT Bank Multiarta Sentosa Tbk,MASB,IDX,Finance
+PT Maxindo Karya Anugerah Tbk,MAXI,IDX,Consumer non-durables
+PT Bank Mayapada Internasional Tbk Class A,MAYA,IDX,Finance
+PT Mitrabara Adiperdana Tbk,MBAP,IDX,Energy minerals
+PT Merdeka Battery Materials Tbk,MBMA,IDX,Non-energy minerals
+PT Mitrabahtera Segara Sejati Tbk,MBSS,IDX,Transportation
+PT Martina Berto Tbk,MBTO,IDX,Consumer non-durables
+PT M Cash Integrasi Tbk,MCAS,IDX,Technology services
+PT Prima Andalan Mandiri Tbk,MCOL,IDX,Energy minerals
+PT Bank China Construction Bank Indonesia Tbk,MCOR,IDX,Finance
+PT Intermedia Capital Tbk,MDIA,IDX,Consumer services
+PT Daya Intiguna Yasa Tbk,MDIY,IDX,Retail trade
+PT Merdeka Copper Gold Tbk,MDKA,IDX,Non-energy minerals
+PT Emdeki Utama Tbk,MDKI,IDX,Process industries
+PT Medela Potentia Tbk,MDLA,IDX,Distribution services
+PT Modernland Realty Tbk Class A,MDLN,IDX,Finance
+PT Modern Internasional Tbk,MDRN,IDX,Retail trade
+PT Medco Energi Internasional Tbk,MEDC,IDX,Energy minerals
+PT Hetzer Medical Indonesia Tbk,MEDS,IDX,Health technology
+PT Bank Mega Tbk,MEGA,IDX,Finance
+PT Harta Djaya Karya Tbk,MEJA,IDX,Commercial services
+PT Menn Teknologi Indonesia Tbk,MENN,IDX,Finance
+PT Merry Riana Edukasi Tbk,MERI,IDX,Commercial services
+PT Merck Tbk,MERK,IDX,Health technology
+PT Mandala Multifinance Tbk,MFIN,IDX,Finance
+PT Panca Anugrah Wisesa Tbk,MGLV,IDX,Consumer durables
+PT Magna Investama Mandiri Tbk,MGNA,IDX,Finance
+PT Mahkota Group Tbk,MGRO,IDX,Process industries
+PT Multi Hanna Kreasindo Tbk,MHKI,IDX,Industrial services
+PT Multi Indocitra Tbk,MICE,IDX,Distribution services
+PT Midi Utama Indonesia Tbk,MIDI,IDX,Retail trade
+PT Mitra Keluarga Karyasehat Tbk,MIKA,IDX,Health services
+PT Sanurhasta Mitra Tbk.,MINA,IDX,Consumer services
+PT Sinar Terang Mandiri TBK,MINE,IDX,Non-energy minerals
+PT Mitra International Resources Tbk,MIRA,IDX,Industrial services
+PT Mitra Investindo Tbk Class A,MITI,IDX,Transportation
+PT Multikarya Asia Pasifik Raya Tbk,MKAP,IDX,Producer manufacturing
+PT Metropolitan Kentjana Tbk,MKPI,IDX,Finance
+PT Menthobi Karyatama Raya Tbk,MKTR,IDX,Commercial services
+PT Multi Bintang Indonesia Tbk,MLBI,IDX,Consumer non-durables
+PT Mulia Industrindo Tbk,MLIA,IDX,Process industries
+PT Multipolar Tbk Class A,MLPL,IDX,Retail trade
+PT Multipolar Technology Tbk,MLPT,IDX,Technology services
+PT Multi Medika Internasional Tbk,MMIX,IDX,Distribution services
+PT Mega Manunggal Property Tbk,MMLP,IDX,Finance
+PT Media Nusantara Citra Tbk,MNCN,IDX,Commercial services
+PT Madusari Murni Indah Tbk,MOLI,IDX,Process industries
+PT Mora Telematika Indonesia Tbk,MORA,IDX,Communications
+PT Mitra Pedagang Indonesia Tbk,MPIX,IDX,Commercial services
+PT Mitra Pinasthika Mustika Tbk,MPMX,IDX,Distribution services
+PT Megapower Makmur Tbk,MPOW,IDX,Utilities
+PT Matahari Putra Prima Tbk,MPPA,IDX,Retail trade
+PT Maha Properti Indonesia Tbk,MPRO,IDX,Finance
+PT MPX Logistics International Tbk,MPXL,IDX,Transportation
+PT Mustika Ratu Tbk,MRAT,IDX,Distribution services
+PT Maskapai Reasuransi Indonesia Tbk,MREI,IDX,Finance
+PT Multisarana Intan Eduka Tbk,MSIE,IDX,Finance
+PT MNC Digital Entertainment Tbk,MSIN,IDX,Consumer services
+PT Multi Spunindo Jaya Tbk,MSJA,IDX,Process industries
+PT MNC Vision Network,MSKY,IDX,Communications
+PT Mastersystem Infotama Tbk,MSTI,IDX,Technology services
+PT Metrodata Electronics Tbk,MTDL,IDX,Electronic technology
+PT Dayamitra Telekomunikasi Tbk,MTEL,IDX,Communications
+PT Capitalinc Investment Tbk Class A,MTFN,IDX,Finance
+PT Metropolitan Land Tbk,MTLA,IDX,Finance
+PT Murni Sadar Tbk,MTMH,IDX,Health services
+PT Meta Epsi Tbk,MTPS,IDX,Industrial services
+PT Malacca Trust Wuwungan Insurance Tbk,MTWI,IDX,Finance
+PT Mutuagung Lestari Tbk,MUTU,IDX,Commercial services
+PT Samindo Resources Tbk,MYOH,IDX,Energy minerals
+PT Mayora Indah Tbk,MYOR,IDX,Consumer non-durables
+PT Adiwarna Anugerah Abadi Tbk,NAIK,IDX,Commercial services
+PT Nanotech Indonesia Global Tbk,NANO,IDX,Commercial services
+PT Andalan Perkasa Abadi Tbk,NASA,IDX,Finance
+PT Wahana Inti Makmur Tbk,NASI,IDX,Consumer non-durables
+PT Surya Permata Andalan Tbk,NATO,IDX,Consumer services
+PT Hassana Boga Sejahtera Tbk,NAYZ,IDX,Consumer non-durables
+PT Trimegah Bangun Persada Tbk,NCKL,IDX,Non-energy minerals
+PT Pelayaran Nelly Dwi Putri Tbk,NELY,IDX,Transportation
+PT Esta Indonesia Tbk,NEST,IDX,Process industries
+PT MDTV Media Technologies Tbk,NETV,IDX,Commercial services
+PT NFC Indonesia Tbk,NFCX,IDX,Technology services
+PT Adhi Kartiko Pratama Tbk,NICE,IDX,Non-energy minerals
+PT Charnic Capital Tbk,NICK,IDX,Finance
+PT PAM Mineral Tbk,NICL,IDX,Non-energy minerals
+PT Pelat Timah Nusantara Tbk,NIKL,IDX,Process industries
+PT City Retail Developments Tbk,NIRO,IDX,Finance
+PT Bank OCBC NISP Tbk,NISP,IDX,Finance
+PT Bank Nationalnobu Tbk,NOBU,IDX,Finance
+PT Nusa Palapa Gemilang Tbk,NPGF,IDX,Process industries
+PT Nusa Raya Cipta Tbk,NRCA,IDX,Industrial services
+PT Nusantara Sawit Sejahtera Tbk,NSSS,IDX,Process industries
+PT Nusatama Berkah Tbk,NTBK,IDX,Consumer durables
+PT Nusantara Almazia Tbk,NZIA,IDX,Finance
+PT Maharaksa Biru Energi Tbk,OASA,IDX,Commercial services
+PT Brigit Biofarmaka Teknologi Tbk,OBAT,IDX,Producer manufacturing
+PT OBM Drilchem Tbk,OBMD,IDX,Process industries
+PT Indo Oil Perkasa Tbk,OILS,IDX,Process industries
+PT Ancora Indonesia Resources Tbk,OKAS,IDX,Non-energy minerals
+PT Oscar Mitra Sukses Sejahtera Tbk,OLIV,IDX,Consumer durables
+PT Jayamas Medica Industri Tbk,OMED,IDX,Health technology
+PT Indonesia Prima Property Tbk,OMRE,IDX,Consumer services
+PT Optima Prima Metal Sinergi Tbk,OPMS,IDX,Distribution services
+PT Abadi Nusantara Hijau Investama Tbk,PACK,IDX,Process industries
+PT Personel Alih Daya Tbk,PADA,IDX,Commercial services
+PT Minna Padi Investama Sekuritas Tbk,PADI,IDX,Finance
+PT Provident Investasi Bersama Tbk,PALM,IDX,Process industries
+PT Bima Sakti Pertiwi Tbk,PAMG,IDX,Finance
+PT Pantai Indah Kapuk Dua Tbk,PANI,IDX,Consumer non-durables
+PT Panorama Sentrawisata Tbk,PANR,IDX,Consumer services
+PT Panin Sekuritas Tbk,PANS,IDX,Finance
+PT Cipta Perdana Lancar Tbk,PART,IDX,Producer manufacturing
+PT Panca Budi Idaman Tbk,PBID,IDX,Process industries
+PT Pan Brothers Tbk,PBRX,IDX,Process industries
+PT Paramita Bangun Sarana Tbk,PBSA,IDX,Industrial services
+PT Prima Cakrawala Abadi Tbk,PCAR,IDX,Consumer non-durables
+PT Destinasi Tirta Nusantara Tbk,PDES,IDX,Consumer services
+PT Primadaya Plastisindo Tbk,PDPP,IDX,Process industries
+PT Panca Global Kapital Tbk,PEGE,IDX,Finance
+PT Phapros Tbk,PEHA,IDX,Distribution services
+PT Penta Valent Tbk,PEVE,IDX,Distribution services
+PT Perusahaan Gas Negara Tbk Class B,PGAS,IDX,Utilities
+PT Pertamina Geothermal Energy Tbk,PGEO,IDX,Utilities
+PT Tourindo Guide Indonesia Tbk,PGJO,IDX,Technology services
+PT Pembangunan Graha Lestari Indah Tbk,PGLI,IDX,Consumer services
+PT Pradiksi Gunatama Tbk,PGUN,IDX,Process industries
+PT Pelangi Indah Canindo Tbk,PICO,IDX,Process industries
+PT Multi Makmur Lemindo Tbk,PIPA,IDX,Non-energy minerals
+PT Pembangunan Jaya Ancol Tbk,PJAA,IDX,Consumer services
+PT Paragon Karya Perkasa Tbk,PKPK,IDX,Industrial services
+PT Planet Properindo Jaya Tbk,PLAN,IDX,Consumer services
+PT Putra Mandiri Jembar Tbk,PMJS,IDX,Retail trade
+PT Prima Multi Usaha Indonesia Tbk,PMUI,IDX,Distribution services
+PT Bank Pan Indonesia Tbk,PNBN,IDX,Finance
+PT Bank Panin Dubai Syariah Tbk,PNBS,IDX,Finance
+PT Pinago Utama Tbk,PNGO,IDX,Process industries
+PT Paninvest Tbk,PNIN,IDX,Consumer services
+PT Panin Financial Tbk,PNLF,IDX,Commercial services
+PT Pudjiadi & Sons Tbk,PNSE,IDX,Consumer services
+PT Pool Advista Finance Tbk,POLA,IDX,Finance
+PT Pollux Hotels Group Tbk,POLI,IDX,Consumer durables
+PT Golden Flower Tbk,POLU,IDX,Consumer non-durables
+PT Asia Pacific Fibers Tbk Class A,POLY,IDX,Process industries
+PT Nusantara Pelabuhan Handal Tbk,PORT,IDX,Transportation
+PT Cikarang Listrindo Tbk,POWR,IDX,Utilities
+PT Prima Globalindo Logistik Tbk,PPGL,IDX,Transportation
+PT PP Presisi Tbk,PPRE,IDX,Industrial services
+PT Paperocks Indonesia Tbk,PPRI,IDX,Distribution services
+PT Famon Awal Bros Sedaya Tbk,PRAY,IDX,Health services
+PT Prodia Widyahusada Tbk,PRDA,IDX,Health services
+PT Royal Prima Tbk,PRIM,IDX,Health services
+PT J Resources Asia Pasifik Tbk,PSAB,IDX,Non-energy minerals
+PT Pancaran Samudera Transport Tbk,PSAT,IDX,Transportation
+PT Prasidha Aneka Niaga Tbk,PSDN,IDX,Process industries
+PT Palma Serasih Tbk.,PSGO,IDX,Consumer non-durables
+PT Red Planet Indonesia Tbk,PSKT,IDX,Consumer services
+PT IMC Pelita Logistik Tbk,PSSI,IDX,Transportation
+PT Bukit Asam Tbk,PTBA,IDX,Energy minerals
+PT Indo Straits Tbk,PTIS,IDX,Transportation
+PT Mitra Pack Tbk,PTMP,IDX,Distribution services
+PT PP (Persero) Tbk,PTPP,IDX,Industrial services
+PT Pulau Subur Tbk,PTPS,IDX,Process industries
+PT Pratama Widya Tbk,PTPW,IDX,Industrial services
+PT Petrosea Tbk,PTRO,IDX,Industrial services
+PT Sat Nusapersada Tbk,PTSN,IDX,Electronic technology
+PT Pioneerindo Gourmet International Tbk,PTSP,IDX,Consumer services
+PT Pudjiadi Prestige Tbk Class A,PUDP,IDX,Finance
+PT Putra Rajawali Kencana Tbk,PURA,IDX,Transportation
+PT Puri Global Sukses Tbk,PURI,IDX,Finance
+PT Pakuwon Jati Tbk,PWON,IDX,Finance
+PT Pyridam Farma Tbk,PYFA,IDX,Health technology
+PT Sarimelati Kencana Tbk,PZZA,IDX,Consumer services
+PT Tripar Multivision Plus Tbk,RAAM,IDX,Consumer services
+PT Rukun Raharja Tbk,RAJA,IDX,Utilities
+PT Ramayana Lestari Sentosa Tbk,RALS,IDX,Retail trade
+PT Supra Boga Lestari Tbk,RANC,IDX,Retail trade
+PT Raharja Energi Cepu Tbk,RATU,IDX,Miscellaneous
+PT Ristia Bintang Mahkotasejati Tbk,RBMS,IDX,Consumer services
+PT Utama Radar Cahaya Tbk,RCCC,IDX,Electronic technology
+PT Roda Vivatex Tbk,RDTX,IDX,Finance
+PT Repower Asia Indonesia Tbk,REAL,IDX,Finance
+PT Graha Mitra Asia Tbk,RELF,IDX,Finance
+PT Reliance Sekuritas Indonesia Tbk,RELI,IDX,Finance
+PT Kian Santang Muliatama Tbk,RGAS,IDX,Industrial services
+PT Ricky Putra Globalindo Tbk,RICY,IDX,Consumer non-durables
+PT Rig Tenders Indonesia Tbk,RIGS,IDX,Transportation
+PT Jaya Sukses Makmur Sentosa Tbk,RISE,IDX,Finance
+PT RMK Energy Tbk,RMKE,IDX,Transportation
+PT Royaltama Mulia Kontraktorindo Tbk,RMKO,IDX,Energy minerals
+PT Rockfields Properti Indonesia Tbk,ROCK,IDX,Finance
+PT Pikko Land Development Tbk,RODA,IDX,Consumer durables
+PT Aracord Nusantara Group Tbk,RONY,IDX,Industrial services
+PT Nippon Indosari Corpindo Tbk,ROTI,IDX,Consumer non-durables
+PT Charlie Hospital Semarang Tbk,RSCH,IDX,Health services
+PT Radiant Utama Interinsco Tbk,RUIS,IDX,Industrial services
+PT Global Sukses Solusi Tbk,RUNS,IDX,Technology services
+PT Steady Safe Tbk,SAFE,IDX,Transportation
+PT Saptausaha Gemilangindah Tbk,SAGE,IDX,Finance
+PT Sarana Meditama Metropolitan Tbk,SAME,IDX,Health services
+PT Saraswanti Anugerah Makmur Tbk,SAMF,IDX,Process industries
+PT Satria Antaran Prima Tbk,SAPX,IDX,Transportation
+PT Kota Satu Properti Tbk,SATU,IDX,Finance
+PT Surya Biru Murni Acetylene Tbk,SBMA,IDX,Process industries
+PT Supreme Cable Manufacturing & Commerce Tbk,SCCO,IDX,Producer manufacturing
+PT Surya Citra Media Tbk,SCMA,IDX,Consumer services
+PT Selaras Citra Nusantara Perkasa Tbk,SCNP,IDX,Consumer durables
+PT Sidomulyo Selaras Tbk,SDMU,IDX,Transportation
+PT Millennium Pharmacon International Tbk,SDPC,IDX,Distribution services
+PT Bank Woori Saudara Indonesia 1906 Tbk,SDRA,IDX,Finance
+PT Semacom Integrated Tbk,SEMA,IDX,Producer manufacturing
+PT Surya Fajar Capital Tbk,SFAN,IDX,Finance
+PT Sumber Global Energy Tbk,SGER,IDX,Non-energy minerals
+PT Sampoerna Agro Tbk,SGRO,IDX,Process industries
+PT Hotel Sahid Jaya International Tbk,SHID,IDX,Consumer services
+PT Sillo Maritime Perdana Tbk,SHIP,IDX,Transportation
+PT Sigma Energy Compressindo Tbk,SICO,IDX,Energy minerals
+PT Industri Jamu dan Farmasi Sido Muncul Tbk,SIDO,IDX,Health technology
+PT Siloam International Hospitals Tbk Reg-S,SILO,IDX,Health services
+PT Salim Ivomas Pratama Tbk,SIMP,IDX,Consumer non-durables
+PT Singaraja Putra Tbk,SINI,IDX,Consumer services
+PT Sreeya Sewu Indonesia Tbk Class A,SIPD,IDX,Process industries
+PT Sekar Bumi Tbk,SKBM,IDX,Consumer non-durables
+PT Sekar Laut Tbk,SKLT,IDX,Consumer non-durables
+PT Superkrane Mitra Utama,SKRN,IDX,Finance
+PT Gaya Abadi Sempurna Tbk,SLIS,IDX,Distribution services
+PT Sinar Mas Agro Resources & Technology Tbk,SMAR,IDX,Process industries
+PT Semen Baturaja Tbk Class B,SMBR,IDX,Non-energy minerals
+PT Suryamas Dutamakmur Tbk,SMDM,IDX,Finance
+PT Samudera Indonesia Tbk,SMDR,IDX,Transportation
+PT Sumber Mineral Global Abadi Tbk,SMGA,IDX,Distribution services
+PT Semen Indonesia (Persero) Tbk,SMGR,IDX,Non-energy minerals
+PT Sarana Mitra Luas Tbk,SMIL,IDX,Finance
+PT Satyamitra Kemas Lestari Tbk,SMKL,IDX,Process industries
+PT Sumber Mas Konstruksi Tbk,SMKM,IDX,Industrial services
+PT Sinergi Multi Lestarindo Tbk,SMLE,IDX,Distribution services
+PT Sinar Mas Multiartha Tbk Class A,SMMA,IDX,Finance
+PT Golden Eagle Energy Tbk,SMMT,IDX,Energy minerals
+PT Summarecon Agung Tbk,SMRA,IDX,Finance
+PT Selamat Sempurna Tbk,SMSM,IDX,Producer manufacturing
+PT Sunter Lakeside Hotel Tbk,SNLK,IDX,Consumer services
+PT Soechi Lines Tbk,SOCI,IDX,Transportation
+PT Boston Furniture Industries Tbk,SOFA,IDX,Non-energy minerals
+PT Soho Global Health Tbk,SOHO,IDX,Health technology
+PT Xolare Rcr Energy Tbk,SOLA,IDX,Industrial services
+PT Sona Topas Tourism Industry Tbk,SONA,IDX,Retail trade
+PT Shield On Service Tbk,SOSS,IDX,Commercial services
+PT Satria Mega Kencana Tbk,SOTS,IDX,Consumer services
+PT Mitra Tirta Buwana Tbk,SOUL,IDX,Consumer non-durables
+PT Suparma Tbk,SPMA,IDX,Process industries
+PT Soraya Berjaya Indonesia Tbk,SPRE,IDX,Consumer durables
+PT Surya Pertiwi Tbk,SPTO,IDX,Distribution services
+PT Sejahteraraya Anugrahjaya Tbk,SRAJ,IDX,Health services
+PT Indo Acidatama Tbk,SRSN,IDX,Consumer non-durables
+PT Saratoga Investama Sedaya Tbk,SRTG,IDX,Finance
+PT Surya Semesta Internusa Tbk,SSIA,IDX,Industrial services
+PT Sawit Sumbermas Sarana Tbk,SSMS,IDX,Process industries
+PT Sunson Textile Manufacturer Tbk,SSTM,IDX,Process industries
+PT Sumber Tani Agung Resources Tbk,STAA,IDX,Process industries
+PT Buana Artha Anugerah Tbk,STAR,IDX,Finance
+PT Lovina Beach Brewery Tbk,STRK,IDX,Consumer non-durables
+PT Siantar Top Tbk,STTP,IDX,Consumer non-durables
+PT SLJ Global Tbk,SULI,IDX,Non-energy minerals
+PT Sunindo Pratama Tbk,SUNI,IDX,Energy minerals
+PT Super Energy Tbk,SURE,IDX,Energy minerals
+PT Maja Agung Latexindo Tbk,SURI,IDX,Consumer non-durables
+PT Saraswanti Indoland Development Tbk,SWID,IDX,Finance
+PT Tunas Alfin Tbk,TALF,IDX,Process industries
+PT Lancartama Sejati Tbk,TAMA,IDX,Consumer durables
+PT Pelayaran Tamarin Samudra Tbk,TAMU,IDX,Transportation
+PT Triputra Agro Persada Tbk,TAPG,IDX,Process industries
+PT Agung Semesta Sejahtera Tbk,TARA,IDX,Finance
+PT Express Transindo Utama Tbk,TAXI,IDX,Transportation
+PT Jaya Swarasa Agung Tbk,TAYS,IDX,Consumer non-durables
+PT Tower Bersama Infrastructure Tbk,TBIG,IDX,Finance
+PT Tunas Baru Lampung Tbk,TBLA,IDX,Process industries
+PT Tembaga Mulia Semanan Tbk,TBMS,IDX,Producer manufacturing
+PT Mandom Indonesia Tbk,TCID,IDX,Consumer non-durables
+PT Transcoal Pacific,TCPI,IDX,Transportation
+PT Dana Brata Luhur Tbk,TEBE,IDX,Industrial services
+PT Telefast Indonesia Tbk,TFAS,IDX,Technology services
+PT Tigaraksa Satria Tbk,TGKA,IDX,Distribution services
+PT KDB Tifa Finance Tbk,TIFA,IDX,Finance
+PT Timah Tbk,TINS,IDX,Non-energy minerals
+PT Tira Austenite Tbk,TIRA,IDX,Distribution services
+PT Pabrik Kertas Tjiwi Kimia Tbk,TKIM,IDX,Process industries
+PT Teladan Prima Agro Tbk,TLDN,IDX,Process industries
+PT Telkom Indonesia (Persero) Tbk Class B,TLKM,IDX,Communications
+PT Temas Tbk,TMAS,IDX,Transportation
+PT Tempo Inti Media Tbk,TMPO,IDX,Consumer services
+PT Trimuda Nuansa Citra Tbk,TNCA,IDX,Transportation
+PT TBS Energi Utama Tbk,TOBA,IDX,Energy minerals
+PT Rohartindo Nusantara Luas Tbk,TOOL,IDX,Commercial services
+PT Topindo Solusi Komunika Tbk,TOSK,IDX,Technology services
+PT Total Bangun Persada Tbk,TOTL,IDX,Industrial services
+PT Surya Toto Indonesia Tbk,TOTO,IDX,Producer manufacturing
+PT Sarana Menara Nusantara Tbk,TOWR,IDX,Finance
+PT Chandra Asri Pacific Tbk,TPIA,IDX,Process industries
+PT Trans Power Marine Tbk,TPMA,IDX,Transportation
+PT Cerestar Indonesia Tbk,TRGU,IDX,Process industries
+PT Trimegah Sekuritas Indonesia Tbk,TRIM,IDX,Finance
+PT Perintis Triniti Properti Tbk,TRIN,IDX,Finance
+PT Trisula International Tbk,TRIS,IDX,Consumer non-durables
+PT Transkon Jaya Tbk,TRJA,IDX,Finance
+PT Teknologi Karya Digital Nusa Tbk,TRON,IDX,Technology services
+"PT Trias Sentosa, Tbk",TRST,IDX,Process industries
+PT Triniti Dinamik Tbk,TRUE,IDX,Finance
+PT Guna Timur Raya Tbk,TRUK,IDX,Transportation
+PT Trust Finance Indonesia Tbk,TRUS,IDX,Finance
+PT Tempo Scan Pacific Tbk,TSPC,IDX,Distribution services
+PT Asuransi Tugu Pratama Indonesia Tbk,TUGU,IDX,Finance
+PT King Tire Indonesia Tbk,TYRE,IDX,Consumer durables
+PT Pakuan Tbk,UANG,IDX,Finance
+PT Uni-Charm Indonesia Tbk,UCID,IDX,Consumer non-durables
+PT Agro Bahari Nusantara Tbk,UDNG,IDX,Process industries
+PT Damai Sejahtera Abadi Tbk,UFOE,IDX,Retail trade
+PT Ultrajaya Milk Industry & Trading Co. Tbk,ULTJ,IDX,Consumer non-durables
+PT Unggul Indah Cahaya Tbk,UNIC,IDX,Consumer non-durables
+PT Ulima Nitra Tbk,UNIQ,IDX,Industrial services
+PT Bakrie Sumatera Plantations Tbk,UNSP,IDX,Distribution services
+PT Terang Dunia Internusa Tbk,UNTD,IDX,Consumer durables
+PT United Tractors Tbk,UNTR,IDX,Energy minerals
+PT Unilever Indonesia Tbk,UNVR,IDX,Consumer non-durables
+PT Urban Jakarta Propertindo Tbk,URBN,IDX,Finance
+PT Trimegah Karya Pratama Tbk,UVCR,IDX,Technology services
+PT Vastland Indonesia Tbk,VAST,IDX,Finance
+PT Verona Indah Pictures Tbk,VERN,IDX,Consumer services
+PT Victoria Care Indonesia Tbk,VICI,IDX,Consumer non-durables
+PT Victoria Investama Tbk,VICO,IDX,Finance
+PT Victoria Insurance Tbk,VINS,IDX,Finance
+PT Satu Visi Putra Tbk,VISI,IDX,Distribution services
+PT Visi Media Asia Tbk Class A,VIVA,IDX,Consumer services
+PT VKTR Teknologi Mobilitas Tbk,VKTR,IDX,Consumer durables
+PT Voksel Electric Tbk,VOKS,IDX,Producer manufacturing
+PT Mizuho Leasing Indonesia Tbk,VRNA,IDX,Finance
+PT Venteny Fortuna International Tbk,VTNY,IDX,Technology services
+PT Wahana Pronatural Tbk,WAPO,IDX,Consumer non-durables
+PT Wijaya Karya Bangunan Gedung Tbk,WEGE,IDX,Industrial services
+PT WEHA Transportasi Indonesia Tbk,WEHA,IDX,Transportation
+PT Wira Global Solusi Tbk,WGSH,IDX,Technology services
+PT Widiant Jaya Krenindo Tbk,WIDI,IDX,Finance
+PT Solusi Sinergi Digital Tbk,WIFI,IDX,Technology services
+PT Wismilak Inti Makmur Tbk,WIIM,IDX,Consumer non-durables
+PT Hatten Bali Tbk,WINE,IDX,Consumer non-durables
+PT Winner Nusantara Jaya Tbk,WINR,IDX,Finance
+PT Wintermar Offshore Marine Tbk,WINS,IDX,Transportation
+PT WIR Asia Tbk,WIRG,IDX,Health services
+PT Widodo Makmur Unggas Tbk,WMUU,IDX,Process industries
+PT Wahana Ottomitra Multiartha Tbk,WOMF,IDX,Finance
+PT Integra Indocabinet Tbk,WOOD,IDX,Consumer durables
+PT Ginting Jaya Energi Tbk,WOWS,IDX,Industrial services
+PT Waskita Beton Precast Tbk,WSBP,IDX,Non-energy minerals
+PT Wijaya Karya Beton Tbk,WTON,IDX,Industrial services
+PT Yelooo Integra Datanet Tbk,YELO,IDX,Distribution services
+PT Asuransi Digital Bersama Tbk,YOII,IDX,Finance
+PT Yanaprima Hastapersada Tbk,YPAS,IDX,Process industries
+PT Yulie Sekuritas Indonesia Tbk,YULE,IDX,Finance
+Pt Yupi Indo Jelly Gum Tbk,YUPI,IDX,Consumer non-durables
+PT Bersama Zatta Jaya Tbk,ZATA,IDX,Retail trade
+PT Kapuas Prima Coal Tbk,ZINC,IDX,Non-energy minerals
+PT Mega Perintis Tbk,ZONE,IDX,Consumer non-durables
+PT Zyrexindo Mandiri Buana Tbk,ZYRX,IDX,Electronic technology

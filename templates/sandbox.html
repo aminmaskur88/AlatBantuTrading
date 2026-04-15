@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Sandbox Dashboard</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        :root {
+            --bg-app: #f0f2f5; --bg-panel: #ffffff;
+            --border-color: #e4e6eb; --text-main: #1c1e21; --text-muted: #65676b;
+            --accent: #1877f2; --accent-hover: #166fe5; --item-hover: #f2f3f5;
+            --buy: #00a400; --sell: #fa3e3e; --hold: #ffba00;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-app: #18191a; --bg-panel: #242526;
+                --border-color: #3e4042; --text-main: #e4e6eb; --text-muted: #b0b3b8;
+                --accent: #2d88ff; --accent-hover: #4e9eff; --item-hover: #3a3b3c;
+            }
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-app); color: var(--text-main); line-height: 1.5; }
+        
+        .header { background: var(--bg-panel); padding: 12px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--accent); }
+        
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 320px 1fr 350px; gap: 20px; }
+        
+        /* AI Chat Log Style */
+        .chat-container { display: flex; flex-direction: column; height: 100%; max-height: 800px; }
+        .chat-messages { flex-grow: 1; overflow-y: auto; padding: 10px; background: var(--bg-app); border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; }
+        .chat-msg { margin-bottom: 12px; padding: 10px; border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border-color); }
+        .chat-msg.ai { border-left: 4px solid var(--accent); }
+        .chat-time { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+
+        .card { background: var(--bg-panel); border-radius: 12px; border: 1px solid var(--border-color); padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .card-title { font-size: 14px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .portfolio-highlight { background: linear-gradient(135deg, var(--accent), #0055d4); color: white; border-radius: 12px; padding: 25px; margin-bottom: 20px; }
+        .balance-label { font-size: 12px; opacity: 0.8; }
+        .balance-value { font-size: 28px; font-weight: 800; margin: 5px 0; }
+        
+        .btn-run { width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--buy); color: white; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; margin-bottom: 20px; }
+        .btn-run:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-run:disabled { background: var(--text-muted); cursor: not-allowed; transform: none; }
+        
+        .holding-item { display: flex; justify-content: space-between; padding: 12px; background: var(--item-hover); border-radius: 8px; margin-bottom: 8px; }
+        .holding-symbol { font-weight: 700; color: var(--accent); }
+        
+        .trade-table { width: 100%; border-collapse: collapse; }
+        .trade-table th { text-align: left; font-size: 12px; color: var(--text-muted); padding: 10px; border-bottom: 1px solid var(--border-color); }
+        .trade-table td { padding: 15px 10px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .badge-buy { background: rgba(0, 164, 0, 0.1); color: var(--buy); }
+        .badge-sell { background: rgba(250, 62, 62, 0.1); color: var(--sell); }
+        
+        .loader-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; flex-direction: column; align-items: center; justify-content: center; color: white; z-index: 1000; backdrop-filter: blur(5px); }
+        .spinner { font-size: 50px; animation: rotate 2s linear infinite; color: var(--accent); margin-bottom: 15px; }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 850px) { .container { grid-template-columns: 1fr; } }
+
+        /* Switch UI */
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--buy); }
+        input:checked + .slider:before { transform: translateX(26px); }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="loader-overlay">
+        <span class="material-icons-round spinner">autorenew</span>
+        <h3 id="loaderText">AI sedang menganalisis pasar...</h3>
+    </div>
+
+    <header class="header">
+        <div class="logo">
+            <span class="material-icons-round">biotech</span>
+            <span>AI TRADING SANDBOX</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted);">Mode Simulasi Terpisah</div>
+    </header>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside>
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="card-title"><span class="material-icons-round">list</span> Monitoring & Auto-Pilot</div>
+                
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding: 10px; background: var(--item-hover); border-radius: 8px;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 13px;">Auto-Pilot Mode</div>
+                        <div id="apStatusText" style="font-size: 10px; color: var(--sell);">Status: OFF</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="apToggle" onchange="toggleAutoPilot()">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <input type="text" id="watchlistInput" placeholder="BTC-USD, ETH-USD, SOL-USD" 
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-main); margin-bottom: 10px;">
+                
+                <button id="runBtn" class="btn-run" onclick="runBot()" style="background: var(--accent);">
+                    <span class="material-icons-round">search</span> MANUAL SCAN
+                </button>
+            </div>
+
+            <div class="portfolio-highlight">
+                <div class="balance-label">Total Virtual Balance (USD)</div>
+                <div id="balance" class="balance-value">$0</div>
+                <div id="pnl" style="font-size: 12px; margin-top: 10px; font-weight: 600;">P/L: $0</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="material-icons-round">inventory_2</span> Assets Owned</div>
+                <div id="holdingsList">
+                    <!-- Dynamic holdings -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+            <!-- TradingView Chart Card -->
+            <div class="card" style="margin-bottom: 20px; padding: 10px;">
+                <div class="card-title" style="padding: 10px 10px 0 10px;">
+                    <span class="material-icons-round">show_chart</span> Live Market Chart
+                </div>
+                <div id="tv-chart-container" style="height: 500px; width: 100%; border-radius: 8px; overflow: hidden;">
+                    <div id="tradingview_chart"></div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="card-title"><span class="material-icons-round">pending_actions</span> AI Trading Plans</div>
+                <div style="overflow-x: auto;">
+                    <table class="trade-table">
+                        <thead>
+                            <tr>
+                                <th>Side</th>
+                                <th>Asset</th>
+                                <th>Entry</th>
+                                <th>TP</th>
+                                <th>SL</th>
+                                <th>Strategy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderBookList">
+                            <!-- Dynamic orders -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="material-icons-round">history</span> Transaction History</div>
+                <div style="overflow-x: auto;">
+                    <table class="trade-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Asset</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradeHistory">
+                            <!-- Dynamic trades -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar: AI Chat Log -->
+        <aside class="chat-container">
+            <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                <div class="card-title"><span class="material-icons-round">forum</span> AI Analysis Log (Real-time)</div>
+                <div id="aiChatLog" class="chat-messages">
+                    <div class="chat-msg">
+                        <div class="chat-time">System</div>
+                        Welcome. Click "Manual Scan" or enable "Auto-Pilot" to start.
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        let currentChartSymbol = "";
+
+        function updateChart(symbol) {
+            if (!symbol || symbol === currentChartSymbol) return;
+            currentChartSymbol = symbol;
+
+            let tvSymbol = symbol;
+            if (!symbol.includes(":")) {
+                if (symbol.includes("-USD")) tvSymbol = `BINANCE:${symbol.replace("-", "")}`;
+                else if (["BBCA", "GOTO", "TLKM", "ASII", "PANI"].includes(symbol)) tvSymbol = `IDX:${symbol}`;
+                else tvSymbol = `NASDAQ:${symbol}`;
+            }
+
+            new TradingView.widget({
+                "width": "100%",
+                "height": 500,
+                "symbol": tvSymbol,
+                "interval": "15",
+                "timezone": "Asia/Jakarta",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "allow_symbol_change": true,
+                "container_id": "tradingview_chart"
+            });
+        }
+
+        async function toggleAutoPilot() {
+            const isChecked = document.getElementById('apToggle').checked;
+            try {
+                const res = await fetch('/api/auto_pilot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: isChecked })
+                });
+                const data = await res.json();
+                updateAPUI(data.auto_pilot);
+            } catch (e) { console.error(e); }
+        }
+
+        async function checkAPStatus() {
+            try {
+                const res = await fetch('/api/auto_pilot_status');
+                const data = await res.json();
+                document.getElementById('apToggle').checked = data.enabled;
+                updateAPUI(data.enabled);
+            } catch (e) { console.error(e); }
+        }
+
+        function updateAPUI(enabled) {
+            const statusText = document.getElementById('apStatusText');
+            if (enabled) {
+                statusText.innerText = "Status: ON (Running)";
+                statusText.style.color = "var(--buy)";
+            } else {
+                statusText.innerText = "Status: OFF";
+                statusText.style.color = "var(--sell)";
+            }
+        }
+
+        async function loadData() {
+            // Load Portfolio
+            try {
+                const res = await fetch('/api/portfolio');
+                const portfolio = await res.json();
+                if (portfolio && portfolio.balance !== undefined) {
+                    let cash = portfolio.balance;
+                    let assetsValue = (portfolio.holdings || []).reduce((sum, h) => sum + (h.value || 0), 0);
+                    let totalEquity = cash + assetsValue;
+                    document.getElementById('balance').innerText = `$${totalEquity.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                    const pnl = totalEquity - (portfolio.initial_capital || 1000);
+                    const pnlEl = document.getElementById('pnl');
+                    pnlEl.innerText = `Total P/L: ${pnl >= 0 ? '+' : ''}$${pnl.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                    pnlEl.style.color = pnl >= 0 ? '#00ff00' : '#ff5555';
+                    pnlEl.innerHTML += `<div style="font-size:10px; color:var(--text-muted); margin-top:5px;">Cash: $${cash.toLocaleString('en-US')} | Assets: $${assetsValue.toLocaleString('en-US')}</div>`;
+
+                    const hList = document.getElementById('holdingsList');
+                    hList.innerHTML = portfolio.holdings.length ? '' : '<div style="color:var(--text-muted); font-size:12px; text-align:center;">No assets.</div>';
+                    portfolio.holdings.forEach(h => {
+                        let hPnl = (h.current_price - h.avg_price) * h.quantity;
+                        hList.innerHTML += `
+                            <div class="holding-item" onclick="updateChart('${h.symbol}')" style="cursor:pointer">
+                                <div><div class="holding-symbol">${h.symbol}</div><div style="font-size:10px;">Avg: $${h.avg_price.toLocaleString()}</div></div>
+                                <div style="text-align:right;"><div style="font-weight:700;">${h.quantity.toFixed(6)}</div><div style="font-size:10px; color:${hPnl >= 0 ? 'var(--buy)' : 'var(--sell)'}">${hPnl >= 0 ? '+' : ''}$${hPnl.toFixed(2)}</div></div>
+                            </div>`;
+                    });
+                }
+            } catch (e) {}
+
+            // Load History
+            try {
+                const res = await fetch('/api/trades_history');
+                const trades = await res.json();
+                const tList = document.getElementById('tradeHistory');
+                tList.innerHTML = trades.length ? '' : '<tr><td colspan="4">Empty</td></tr>';
+                trades.slice(0, 10).forEach(t => {
+                    tList.innerHTML += `<tr onclick="updateChart('${t.symbol}')" style="cursor:pointer"><td><span class="badge badge-${t.type.toLowerCase()}">${t.type}</span></td><td><b>${t.symbol}</b></td><td>$${t.price.toLocaleString()}</td><td><b>$${(t.lots * t.price).toLocaleString()}</b></td></tr>`;
+                });
+            } catch (e) {}
+
+            // Load Orders
+            try {
+                const res = await fetch('/api/orders');
+                const orders = await res.json();
+                const oList = document.getElementById('orderBookList');
+                oList.innerHTML = orders.length ? '' : '<tr><td colspan="6">No plans</td></tr>';
+                orders.forEach(o => {
+                    oList.innerHTML += `<tr onclick="updateChart('${o.symbol}')" style="cursor:pointer"><td><span class="badge badge-${o.side.toLowerCase()}">${o.side}</span></td><td><b>${o.symbol}</b></td><td>$${o.target_price.toLocaleString()}</td><td>$${o.tp_price ? o.tp_price.toLocaleString() : '-'}</td><td>$${o.sl_price ? o.sl_price.toLocaleString() : '-'}</td><td>"${o.reason}"</td></tr>`;
+                });
+            } catch (e) {}
+
+            // Load Logs
+            try {
+                const res = await fetch('/api/logs');
+                const logs = await res.json();
+                const logContainer = document.getElementById('aiChatLog');
+                if (logs.length > 0 && logContainer.children.length <= 1) {
+                    logContainer.innerHTML = '';
+                    logs.forEach(l => {
+                        logContainer.innerHTML += `<div class="chat-msg ai"><div class="chat-time">${new Date(l.time).toLocaleTimeString()}</div>${l.message}</div>`;
+                    });
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }
+            } catch (e) {}
+
+            checkAPStatus();
+        }
+
+        function appendLog(message) {
+            const logContainer = document.getElementById('aiChatLog');
+            const now = new Date().toLocaleTimeString();
+            logContainer.innerHTML += `<div class="chat-msg ai"><div class="chat-time">${now}</div>${message}</div>`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+            const symbolRegex = /([A-Z0-9]+-USD)/g;
+            const matches = message.match(symbolRegex);
+            if (matches) updateChart(matches[0]);
+        }
+
+        async function runBot() {
+            const btn = document.getElementById('runBtn');
+            const wlInput = document.getElementById('watchlistInput').value;
+            const watchlist = wlInput.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
+            btn.disabled = true;
+            appendLog("🚀 Starting market scan...");
+            try {
+                const res = await fetch('/api/run_bot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ watchlist: watchlist }) });
+                const data = await res.json();
+                if (data.logs) data.logs.forEach(l => appendLog(l));
+                loadData();
+            } catch (e) { appendLog("⚠️ Connection error."); }
+            finally { btn.disabled = false; }
+        }
+
+        loadData();
+        updateChart("BTC-USD");
+        setInterval(loadData, 10000);
+    </script>
+</body>
+</html>

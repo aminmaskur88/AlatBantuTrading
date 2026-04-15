@@ -1,0 +1,35 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Data & Cache (Keep the directories, but ignore JSON results)
+data/raw/*.json
+data/clean/*.json
+data/result/*.json
+data/trades.db-journal
+
+# Selenium & Browser
+chrome_profile/
+*.log
+chromedriver
+
+# Secrets (IMPORTANT)
+gemini_key.txt
+config.json
+
+# IDE
+.vscode/
+.idea/
+.project
+.pydevproject
+
+# Termux / System
+.gemini/
+tmp/

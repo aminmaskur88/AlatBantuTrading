@@ -1,0 +1,122 @@
+from flask import Flask, render_template, jsonify, request
+import sqlite3
+import logging
+import threading
+import time
+from sandbox_logic import get_portfolio, run_bot_iteration, init_db
+
+app = Flask(__name__)
+DB_PATH = "data/trades.db"
+
+# Inisialisasi DB saat start
+init_db()
+
+# Auto-Pilot Global Variable
+auto_pilot_enabled = False
+
+def auto_pilot_loop():
+    global auto_pilot_enabled
+    while True:
+        if auto_pilot_enabled:
+            print("--- Auto-Pilot: Scanning Market ---")
+            try:
+                run_bot_iteration()
+            except Exception as e:
+                print(f"Auto-Pilot Error: {e}")
+        time.sleep(30) # Run every 30 seconds
+
+# Start background thread
+threading.Thread(target=auto_pilot_loop, daemon=True).start()
+
+@app.route("/")
+def index():
+    return render_template("sandbox.html")
+
+@app.route("/api/portfolio")
+def portfolio_api():
+    try:
+        balance, initial_capital, holdings = get_portfolio()
+        return jsonify({
+            "balance": balance,
+            "initial_capital": initial_capital,
+            "holdings": holdings
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/trades_history")
+def trades_history_api():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        cur.execute("SELECT trade_type, symbol, date, price, lots, reason FROM trades ORDER BY id DESC LIMIT 50")
+        rows = cur.fetchall()
+        conn.close()
+        
+        trades = []
+        for r in rows:
+            trades.append({
+                "type": r[0],
+                "symbol": r[1],
+                "date": r[2],
+                "price": r[3],
+                "lots": r[4],
+                "reason": r[5]
+            })
+        return jsonify(trades)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/orders")
+def orders_api():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        cur.execute("SELECT symbol, target_price, quantity, side, reason, tp_price, sl_price FROM orders WHERE status = 'PENDING'")
+        orders = [{"symbol": r[0], "target_price": r[1], "quantity": r[2], "side": r[3], "reason": r[4], "tp_price": r[5], "sl_price": r[6]} for r in cur.fetchall()]
+        conn.close()
+        return jsonify(orders)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/logs")
+def logs_api():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        cur.execute("SELECT message, timestamp FROM logs ORDER BY id DESC LIMIT 100")
+        rows = cur.fetchall()
+        conn.close()
+        logs = [{"message": r[0], "time": r[1]} for r in rows]
+        return jsonify(logs[::-1])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/run_bot", methods=["POST"])
+def run_bot_api():
+    try:
+        data = request.json or {}
+        watchlist = data.get("watchlist", [])
+        result = run_bot_iteration(watchlist=watchlist)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/auto_pilot", methods=["POST"])
+def toggle_auto_pilot():
+    global auto_pilot_enabled
+    data = request.json or {}
+    auto_pilot_enabled = data.get("enabled", False)
+    status = "Enabled" if auto_pilot_enabled else "Disabled"
+    print(f"--- Auto-Pilot {status} ---")
+    return jsonify({"status": "success", "auto_pilot": auto_pilot_enabled})
+
+@app.route("/api/auto_pilot_status")
+def get_auto_pilot_status():
+    global auto_pilot_enabled
+    return jsonify({"enabled": auto_pilot_enabled})
+
+if __name__ == "__main__":
+    print("\n--- Sandbox Server Running ---")
+    print("Akses di: http://localhost:5001")
+    app.run(host="0.0.0.0", port=5001, debug=True)

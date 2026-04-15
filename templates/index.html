@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Stock Analyzer Pro</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        :root {
+            --bg-app: #f4f6f8; --bg-panel: #ffffff; --bg-workspace: #e1e4e8;
+            --border-color: #d1d5db; --text-main: #1f2937; --text-muted: #6b7280;
+            --accent: #2563eb; --accent-hover: #1d4ed8; --item-hover: #f3f4f6;
+            --item-active: #eef2ff; --canvas-bg: #000000;
+            --shadow-canvas: 0 4px 15px rgba(0, 0, 0, 0.2);
+            --buy: #10b981; --sell: #ef4444; --hold: #f59e0b;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-app: #111111; --bg-panel: #1e1e1e; --bg-workspace: #161616;
+                --border-color: #333333; --text-main: #e5e5e5; --text-muted: #888888;
+                --accent: #3b82f6; --accent-hover: #60a5fa; --item-hover: #262626;
+                --item-active: #2a3a50; --canvas-bg: #000000;
+                --shadow-canvas: 0 4px 20px rgba(0, 0, 0, 0.5);
+            }
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-app);
+            color: var(--text-main); height: 100vh; height: 100dvh; overflow: hidden;
+            display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 320px 1fr;
+            grid-template-areas: "header header" "sidebar workspace";
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .header-area { grid-area: header; background-color: var(--bg-panel); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; }
+        .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; }
+        .logo .material-icons-round { color: var(--accent); }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .btn-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: 6px; display: flex; align-items: center; }
+        .btn-icon:hover { background: var(--item-hover); color: var(--text-main); }
+        
+        .sidebar-area { grid-area: sidebar; background-color: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; overflow-y: auto; }
+        .sidebar-section { padding: 16px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid var(--border-color); }
+        .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; gap: 6px;}
+        .section-title .material-icons-round { font-size: 14px; }
+        
+        .options-box { background-color: var(--bg-app); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+        .form-label { font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; display: block; }
+        .input-box { width: 100%; background-color: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 12px; border-radius: 8px; font-size: 13px; outline: none; transition: all 0.2s; }
+        .input-box:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--item-active); }
+        
+        .btn-primary { background-color: var(--accent); color: #fff; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+        .btn-primary:hover { background-color: var(--accent-hover); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .data-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+        .data-label { color: var(--text-muted); }
+        .data-value { font-weight: 600; text-align: right; }
+        
+        .signal-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 16px; color: white; text-align: center; width: 100%; margin-bottom: 10px;}
+        .signal-buy { background-color: var(--buy); }
+        .signal-sell { background-color: var(--sell); }
+        .signal-hold { background-color: var(--hold); color: black; }
+        
+        .workspace-area { grid-area: workspace; background-color: var(--bg-workspace); display: flex; flex-direction: column; overflow: hidden; }
+        .canvas-toolbar { min-height: 48px; background-color: var(--bg-panel); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 16px; z-index: 5; }
+        
+        .workspace-content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        
+        .panel-card { background-color: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .panel-header { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;}
+        .panel-header .material-icons-round { color: var(--accent); }
+        
+        .chat-box { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; max-height: 250px; margin-bottom: 10px; padding: 10px; background: var(--bg-app); border-radius: 8px; border: 1px solid var(--border-color);}
+        .message { padding: 8px 12px; border-radius: 8px; font-size: 13px; max-width: 85%; word-wrap: break-word; }
+        .user-message { background-color: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 0; }
+        .bot-message { background-color: var(--bg-panel); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 0; border: 1px solid var(--border-color); }
+        .chat-input-row { display: flex; gap: 8px; }
+        
+        .news-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .news-item { border-radius: 8px; background: var(--bg-app); border: 1px solid var(--border-color); font-size: 13px; transition: all 0.2s; overflow: hidden; }
+        .news-item:hover { border-color: var(--accent); background: var(--item-active); }
+        .news-item a { color: var(--accent); text-decoration: none; font-weight: 600; display: block; padding: 12px; width: 100%; height: 100%; }
+        .news-item a:hover { text-decoration: underline; }
+        
+        .loader-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; backdrop-filter: blur(4px); display: none; }
+        .loader-overlay .material-icons-round { font-size: 48px; animation: spin 2s linear infinite; margin-bottom: 16px; color: var(--accent); }
+        
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        @media (max-width: 900px) {
+            body { grid-template-columns: 1fr; grid-template-rows: 52px auto 1fr; grid-template-areas: "header" "sidebar" "workspace"; overflow-y: auto; height: auto; }
+            .sidebar-area { border-right: none; border-bottom: 1px solid var(--border-color); max-height: unset; flex-shrink: 0; }
+            .workspace-area { min-height: 70vh; }
+        }
+        
+        #resultsContainer { display: none; }
+
+        /* Floating Chat Widget */
+        .chat-widget-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+        }
+        .chat-window {
+            width: 350px;
+            height: 450px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 15px;
+            transform-origin: bottom right;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .chat-window.open {
+            transform: scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .chat-header {
+            padding: 12px 16px;
+            background: var(--accent);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h4 { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        
+        .chat-toggle-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+        .chat-toggle-btn:hover { transform: scale(1.05); }
+        .chat-toggle-btn .material-icons-round { font-size: 28px; }
+
+        @media (max-width: 480px) {
+            .chat-window {
+                width: calc(100vw - 40px);
+                height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-area">
+        <div class="logo">
+            <span class="material-icons-round">show_chart</span>
+            <span>AI Stock Analyzer Pro</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn-icon" id="btnFullscreen" title="Fullscreen"><span class="material-icons-round">fullscreen</span></button>
+        </div>
+    </header>
+
+    <aside class="sidebar-area">
+        <div class="sidebar-section">
+            <h3 class="section-title"><span class="material-icons-round">search</span> Analisis Saham</h3>
+            <form id="analyzeForm" class="options-box">
+                <div>
+                    <label class="form-label">Kode Aset / Saham</label>
+                    <input type="text" id="tickerInput" class="input-box" placeholder="Contoh: BBCA, AAPL, BTC-USD" required autocomplete="off" spellcheck="false" autocorrect="off">
+                </div>
+                <button type="submit" class="btn-primary" id="analyzeBtn">
+                    <span class="material-icons-round">rocket_launch</span> ANALISIS SEKARANG
+                </button>
+            </form>
+            <div id="errorAlert" style="color: var(--sell); font-size: 12px; margin-top: 10px; display: none; font-weight: 600; text-align: center;"></div>
+        </div>
+
+        <div id="sidebarResults" style="display: none; flex: 1; display: flex; flex-direction: column;">
+            <div class="sidebar-section">
+                <h3 class="section-title"><span class="material-icons-round">info</span> Ringkasan</h3>
+                <div class="options-box">
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <h2 id="resSymbol" style="margin: 0; font-size: 24px; color: var(--accent);"></h2>
+                        <div id="resCompany" style="font-size: 12px; color: var(--text-muted);"></div>
+                    </div>
+                    <div class="data-row"><span class="data-label">Harga:</span><span class="data-value" id="resPrice"></span></div>
+                    <div class="data-row"><span class="data-label">Perubahan:</span><span class="data-value" id="resChange"></span></div>
+                    <div class="data-row"><span class="data-label">Tren:</span><span class="data-value" id="resTrend" style="text-transform: capitalize;"></span></div>
+                    <div class="data-row"><span class="data-label">Sentimen:</span><span class="data-value" id="resSentiment" style="text-transform: capitalize;"></span></div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="section-title"><span class="material-icons-round">lightbulb</span> Rekomendasi AI</h3>
+                <div class="options-box">
+                    <div id="resSignal" class="signal-badge"></div>
+                    <div class="data-row"><span class="data-label">Entry Beli:</span><span class="data-value" style="color: var(--buy);" id="resEntry"></span></div>
+                    <div class="data-row"><span class="data-label">Target:</span><span class="data-value" style="color: var(--accent);" id="resTarget"></span></div>
+                    <div class="data-row"><span class="data-label">Cut Loss:</span><span class="data-value" style="color: var(--sell);" id="resCutloss"></span></div>
+                </div>
+            </div>
+            
+            <div class="sidebar-section" style="flex: 1; display: flex; flex-direction: column;">
+                <h3 class="section-title">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="material-icons-round">forum</span> Tanya AI
+                    </div>
+                    <button id="btnExpandChat" class="btn-icon" style="margin-left: auto; padding: 2px;" title="Perbesar Chat">
+                        <span class="material-icons-round" style="font-size: 16px;">open_in_full</span>
+                    </button>
+                </h3>
+                <div class="options-box" style="flex: 1; padding: 10px; display: flex; flex-direction: column;">
+                    <div id="chatBox" class="chat-box">
+                        <div class="message bot-message">Halo! Ada yang ingin ditanyakan tentang saham ini?</div>
+                    </div>
+                    <form id="chatForm" class="chat-input-row">
+                        <input type="text" id="chatInput" class="input-box" placeholder="Ketik pesan..." style="padding: 8px;" autocomplete="off" spellcheck="false" autocorrect="off">
+                        <button type="submit" class="btn-primary" id="chatBtn" style="width: auto; padding: 8px 12px;">
+                            <span class="material-icons-round" style="font-size: 18px;">send</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="workspace-area" style="position: relative;">
+        <div class="canvas-toolbar">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span class="material-icons-round" style="color:var(--accent);">dashboard</span>
+                <span style="font-size: 13px; font-weight: 700;">WORKSPACE ANALISIS</span>
+                <span id="currentTickerText" style="font-size: 11px; color: var(--text-muted); background: var(--item-hover); padding: 2px 8px; border-radius: 4px; display: none; font-weight: bold;"></span>
+            </div>
+        </div>
+
+        <div id="welcomeScreen" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted);">
+            <span class="material-icons-round" style="font-size: 64px; opacity: 0.2; margin-bottom: 16px;">query_stats</span>
+            <h3>Mulai Analisis</h3>
+            <p style="font-size: 13px;">Masukkan kode saham di panel kiri untuk melihat data dan analisis AI.</p>
+        </div>
+
+        <div class="workspace-content" id="resultsContainer">
+            <!-- Chart -->
+            <div class="panel-card" style="padding: 0; overflow: hidden; flex-shrink: 0; border-radius: 12px; display: flex; flex-direction: column;">
+                <div class="panel-header" style="padding: 12px 16px 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 0;"><span class="material-icons-round">stacked_line_chart</span> Grafik Teknikal Real-Time</div>
+                <div id="tradingview_chart" style="height: 450px; width: 100%; background: var(--canvas-bg);"></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <!-- AI Analysis Text -->
+                <div class="panel-card">
+                    <div class="panel-header"><span class="material-icons-round">psychology</span> Analisis Mendalam AI</div>
+                    <div id="resAnalysis" style="font-size: 13px; line-height: 1.6; white-space: pre-wrap; color: var(--text-main);"></div>
+                    <div id="resReason" style="font-size: 12px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color); color: var(--text-muted); font-style: italic;"></div>
+                </div>
+
+                <!-- News -->
+                <div class="panel-card">
+                    <div class="panel-header" style="justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round">newspaper</span> Berita Terkait
+                        </div>
+                        <button id="btnMoreNews" class="btn-primary" style="width: auto; padding: 4px 10px; font-size: 11px; height: 28px;">
+                            <span class="material-icons-round" style="font-size: 14px;">add</span> TAMBAH BERITA
+                        </button>
+                    </div>
+                    <ul class="news-list" id="resNewsList"></ul>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mainLoader" class="loader-overlay">
+            <span class="material-icons-round">autorenew</span>
+            <h3 style="margin:0;">Menganalisis Data...</h3>
+            <p style="font-size: 13px; opacity: 0.8; margin-top: 8px;">Mengambil harga, berita, dan memproses AI</p>
+        </div>
+    </main>
+
+    <!-- Large Chat Modal -->
+    <div id="largeChatModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
+        <div style="background: var(--bg-panel); width: 100%; max-width: 900px; height: 90vh; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <div style="padding: 16px 24px; background: var(--accent); color: white; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="material-icons-round">psychology</span>
+                    <div>
+                        <h2 style="font-size: 16px; margin: 0;">Analisis Chat Mendalam</h2>
+                        <div id="modalTickerInfo" style="font-size: 11px; opacity: 0.8; font-weight: 600;"></div>
+                    </div>
+                </div>
+                <button class="btn-icon" id="btnCloseLargeChat" style="color: white; background: rgba(255,255,255,0.1);"><span class="material-icons-round">close</span></button>
+            </div>
+            <div id="largeChatBox" class="chat-box" style="flex: 1; max-height: none; margin: 0; padding: 24px; background: transparent; overflow-y: auto;">
+                <!-- Messages will be synced here -->
+            </div>
+            <div style="padding: 24px; background: var(--bg-panel); border-top: 1px solid var(--border-color);">
+                <form id="largeChatForm" style="display: flex; gap: 12px; max-width: 100%; margin: 0 auto;">
+                    <input type="text" id="largeChatInput" class="input-box" placeholder="Tanyakan apa saja tentang saham ini..." style="padding: 14px 20px; border-radius: 12px; flex: 1; font-size: 14px;" autocomplete="off" spellcheck="false" autocorrect="off">
+                    <button type="submit" class="btn-primary" id="largeChatBtn" style="width: 50px; height: 50px; border-radius: 12px; min-width: auto; flex-shrink: 0;">
+                        <span class="material-icons-round">send</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Global Variables & Initializers ---
+        let currentSymbol = "";
+        const chatBox = document.getElementById('chatBox');
+        const largeChatModal = document.getElementById('largeChatModal');
+        const largeChatBox = document.getElementById('largeChatBox');
+        const largeChatInput = document.getElementById('largeChatInput');
+        const largeChatForm = document.getElementById('largeChatForm');
+
+        const btnFullscreen = document.getElementById('btnFullscreen');
+        btnFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); } 
+            else { document.exitFullscreen(); }
+        });
+        document.addEventListener('fullscreenchange', () => {
+            btnFullscreen.querySelector('span').innerText = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
+        });
+
+        function loadTradingViewWidget(symbol) {
+                let tvSymbol = symbol.toUpperCase();
+                
+                // Hapus tanda hubung untuk Crypto (misal BTC-USD jadi BTCUSD)
+                tvSymbol = tvSymbol.replace("-", "");
+        
+                // Tentukan prefix IDX jika hanya 4 huruf dan huruf pertama bukan A/B dll yg umum global (ini heuristik sederhana)
+                // Cara terbaik: jika user tidak pakai ':', dan panjang 4, coba IDX
+                if (tvSymbol.length === 4 && !tvSymbol.includes(':') && !["AAPL", "TSLA", "MSFT", "AMZN", "META"].includes(tvSymbol)) {
+                    tvSymbol = "IDX:" + tvSymbol;
+                }
+        
+                const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;            document.getElementById('tradingview_chart').innerHTML = ''; // clear old chart
+            
+            new TradingView.widget({
+                "container_id": "tradingview_chart",
+                "symbol": tvSymbol,
+                "interval": "D",
+                "theme": isDark ? "dark" : "light",
+                "style": "1",
+                "locale": "id",
+                "width": "100%",
+                "height": 450,
+                "timezone": "Asia/Jakarta",
+                "toolbar_bg": "transparent",
+                "enable_publishing": false,
+                "allow_symbol_change": true,
+                "save_image": false
+            });
+        }
+
+        document.getElementById('analyzeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ticker = document.getElementById('tickerInput').value.trim();
+            if(!ticker) return;
+
+            document.getElementById('errorAlert').style.display = 'none';
+            document.getElementById('mainLoader').style.display = 'flex';
+            document.getElementById('analyzeBtn').disabled = true;
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol: ticker })
+                });
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Terjadi kesalahan pada server');
+
+                currentSymbol = ticker;
+                const resData = data.data;
+                const aiRes = data.ai_result;
+
+                // Populate Sidebar
+                document.getElementById('resSymbol').textContent = ticker.toUpperCase();
+                document.getElementById('resCompany').textContent = resData.company_name;
+                
+                // Format harga dengan titik/koma sesuai locale Indonesia
+                const currencyPrefix = resData.currency === 'IDR' ? 'Rp ' : (resData.currency === 'USD' ? '$' : resData.currency + ' ');
+                const formattedPrice = resData.price ? parseFloat(resData.price).toLocaleString('id-ID') : '-';
+                document.getElementById('resPrice').textContent = `${currencyPrefix}${formattedPrice}`;
+                
+                const changeEl = document.getElementById('resChange');
+                const changeVal = resData.change ? parseFloat(resData.change).toFixed(2) : '0.00';
+                changeEl.textContent = `${changeVal}%`;
+                changeEl.style.color = (parseFloat(changeVal) > 0) ? 'var(--buy)' : (parseFloat(changeVal) < 0 ? 'var(--sell)' : 'var(--text-muted)');
+
+                document.getElementById('resTrend').textContent = resData.market_trend || '-';
+                document.getElementById('resSentiment').textContent = resData.sentiment || '-';
+
+                const signalBadge = document.getElementById('resSignal');
+                signalBadge.textContent = aiRes.signal;
+                signalBadge.className = 'signal-badge ';
+                if(aiRes.signal.toUpperCase() === 'BUY') signalBadge.classList.add('signal-buy');
+                else if(aiRes.signal.toUpperCase() === 'SELL') signalBadge.classList.add('signal-sell');
+                else signalBadge.classList.add('signal-hold');
+
+                const formatNum = (val) => {
+                    if (val === null || val === undefined || val === 'NaN' || isNaN(parseFloat(val))) return '-';
+                    return parseFloat(val).toLocaleString('id-ID');
+                };
+                document.getElementById('resEntry').textContent = formatNum(aiRes.entry_price);
+                document.getElementById('resTarget').textContent = formatNum(aiRes.target_price);
+                document.getElementById('resCutloss').textContent = formatNum(aiRes.cut_loss_price);
+                
+                // Populate Workspace
+                document.getElementById('resAnalysis').textContent = aiRes.analysis;
+                document.getElementById('resReason').innerHTML = `<b>Alasan AI:</b> ${aiRes.reason}`;
+
+                const newsList = document.getElementById('resNewsList');
+                newsList.innerHTML = '';
+                if (resData.news && resData.news.length > 0) {
+                    resData.news.forEach(n => {
+                        const li = document.createElement('li');
+                        li.className = 'news-item';
+                        if (n.link) {
+                            li.innerHTML = `<a href="${n.link}" target="_blank">${n.title}</a>`;
+                        } else {
+                            li.textContent = n.title;
+                        }
+                        newsList.appendChild(li);
+                    });
+                } else {
+                    newsList.innerHTML = '<li class="news-item" style="color: var(--text-muted);">Tidak ada berita terbaru.</li>';
+                }
+
+                // Chat reset
+                chatBox.innerHTML = '<div class="message bot-message">Halo! Ada yang ingin ditanyakan tentang saham ini?</div>';
+
+                // Chart
+                loadTradingViewWidget(ticker);
+
+                // Show UI
+                document.getElementById('welcomeScreen').style.display = 'none';
+                document.getElementById('sidebarResults').style.display = 'flex';
+                document.getElementById('resultsContainer').style.display = 'flex';
+                document.getElementById('currentTickerText').textContent = ticker.toUpperCase();
+                document.getElementById('currentTickerText').style.display = 'inline-block';
+                
+            } catch (error) {
+                const alert = document.getElementById('errorAlert');
+                alert.textContent = error.message;
+                alert.style.display = 'block';
+            } finally {
+                document.getElementById('mainLoader').style.display = 'none';
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        });
+
+        // --- Additional News Feature ---
+        document.getElementById('btnMoreNews').addEventListener('click', async () => {
+            if (!currentSymbol) return;
+            
+            const btn = document.getElementById('btnMoreNews');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-icons-round" style="font-size: 14px; animation: spin 1s linear infinite;">sync</span>';
+
+            try {
+                const response = await fetch('/api/more_news', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol: currentSymbol })
+                });
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error(data.error || 'Gagal mencari berita');
+                
+                const newsList = document.getElementById('resNewsList');
+                if (data.news && data.news.length > 0) {
+                    const existingLinks = Array.from(newsList.querySelectorAll('a')).map(a => a.href);
+                    data.news.forEach(n => {
+                        if (n.link && !existingLinks.includes(n.link)) {
+                            const li = document.createElement('li');
+                            li.className = 'news-item';
+                            li.style.borderLeft = '4px solid var(--accent)';
+                            li.innerHTML = `<a href="${n.link}" target="_blank">${n.title}</a>`;
+                            newsList.appendChild(li);
+                        }
+                    });
+                }
+
+                if (data.ai_reply) {
+                    const chatBox = document.getElementById('chatBox');
+                    const botMsg = document.createElement('div');
+                    botMsg.className = 'message bot-message';
+                    botMsg.style.borderLeft = '3px solid var(--accent)';
+                    let formattedText = data.ai_reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    formattedText = formattedText.replace(/\n/g, '<br>');
+                    botMsg.innerHTML = `<b>Update Riset Otomatis:</b><br>${formattedText}`;
+                    chatBox.appendChild(botMsg);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+
+                // Update Dashboard jika ada analisa baru
+                if (data.ai_result) {
+                    const aiRes = data.ai_result;
+                    const formatNum = (val) => val ? parseFloat(val).toLocaleString('id-ID') : '-';
+
+                    // Signal
+                    const signalBadge = document.getElementById('resSignal');
+                    signalBadge.textContent = aiRes.signal;
+                    signalBadge.className = 'signal-badge ';
+                    if(aiRes.signal.toUpperCase() === 'BUY') signalBadge.classList.add('signal-buy');
+                    else if(aiRes.signal.toUpperCase() === 'SELL') signalBadge.classList.add('signal-sell');
+                    else signalBadge.classList.add('signal-hold');
+
+                    // Data Row
+                    document.getElementById('resEntry').textContent = formatNum(aiRes.entry_price);
+                    document.getElementById('resTarget').textContent = formatNum(aiRes.target_price);
+                    document.getElementById('resCutloss').textContent = formatNum(aiRes.cut_loss_price);
+
+                    // Analysis
+                    document.getElementById('resAnalysis').textContent = aiRes.analysis;
+                    document.getElementById('resReason').innerHTML = `<b>Update Alasan AI:</b> ${aiRes.reason}`;
+                    
+                    // Notifikasi Update
+                    const updateMsg = document.createElement('div');
+                    updateMsg.className = 'message bot-message';
+                    updateMsg.style.background = 'var(--item-active)';
+                    updateMsg.innerHTML = '✨ <b>Dashboard telah diperbarui berdasarkan riset otomatis terbaru.</b>';
+                    document.getElementById('chatBox').appendChild(updateMsg);
+                }
+
+                if (!data.news || data.news.length === 0) {
+                    // Jika tidak ada berita baru sama sekali dari Bing
+                    console.log("Tidak ada berita tambahan baru di internet saat ini.");
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+
+        // --- Large Chat Logic ---
+        document.getElementById('btnExpandChat').onclick = () => {
+            if (!currentSymbol) return;
+            // Sync content from sidebar to large chat
+            largeChatBox.innerHTML = chatBox.innerHTML;
+            document.getElementById('modalTickerInfo').textContent = `${currentSymbol} - ${document.getElementById('resCompany').textContent}`;
+            largeChatModal.style.display = 'flex';
+            largeChatBox.scrollTop = largeChatBox.scrollHeight;
+            largeChatInput.focus();
+        };
+
+        document.getElementById('btnCloseLargeChat').onclick = () => {
+            largeChatModal.style.display = 'none';
+        };
+
+        async function handleChat(message, isLarge = false) {
+            const currentChatBox = isLarge ? largeChatBox : chatBox;
+            const currentInput = isLarge ? largeChatInput : document.getElementById('chatInput');
+            const currentBtn = isLarge ? document.getElementById('largeChatBtn') : document.getElementById('chatBtn');
+
+            if (!message || !currentSymbol) return;
+
+            // Add user message to both boxes
+            const appendMessage = (msg, role) => {
+                const div = document.createElement('div');
+                div.className = `message ${role}-message`;
+                div.textContent = msg;
+                chatBox.appendChild(div.cloneNode(true));
+                largeChatBox.appendChild(div);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                largeChatBox.scrollTop = largeChatBox.scrollHeight;
+            };
+
+            appendMessage(message, 'user');
+
+            currentInput.value = '';
+            currentInput.disabled = true;
+            currentBtn.disabled = true;
+
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot-message typing-indicator';
+            typingDiv.innerHTML = '<span class="material-icons-round" style="font-size: 14px; animation: spin 1s linear infinite; vertical-align: middle;">sync</span> <em>Mengetik...</em>';
+            
+            const typingSidebar = typingDiv.cloneNode(true);
+            chatBox.appendChild(typingSidebar);
+            largeChatBox.appendChild(typingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            largeChatBox.scrollTop = largeChatBox.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol: currentSymbol, message: message })
+                });
+                const data = await response.json();
+                
+                document.querySelectorAll('.typing-indicator').forEach(el => el.remove());
+                
+                if (!response.ok) throw new Error(data.error || 'Server error');
+
+                const botMsgDiv = document.createElement('div');
+                botMsgDiv.className = 'message bot-message';
+                let formattedText = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                formattedText = formattedText.replace(/\n/g, '<br>');
+                botMsgDiv.innerHTML = formattedText;
+                
+                chatBox.appendChild(botMsgDiv.cloneNode(true));
+                largeChatBox.appendChild(botMsgDiv);
+                
+            } catch (error) {
+                document.querySelectorAll('.typing-indicator').forEach(el => el.remove());
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'message bot-message';
+                errorMsg.style.color = 'var(--sell)';
+                errorMsg.textContent = `Error: ${error.message}`;
+                chatBox.appendChild(errorMsg.cloneNode(true));
+                largeChatBox.appendChild(errorMsg);
+            } finally {
+                chatBox.scrollTop = chatBox.scrollHeight;
+                largeChatBox.scrollTop = largeChatBox.scrollHeight;
+                currentInput.disabled = false;
+                currentBtn.disabled = false;
+                currentInput.focus();
+            }
+        }
+
+        document.getElementById('chatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleChat(document.getElementById('chatInput').value.trim(), false);
+        });
+
+        largeChatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleChat(largeChatInput.value.trim(), true);
+        });
+    </script>
+
+</body>
+</html>
