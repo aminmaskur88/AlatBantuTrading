@@ -43,11 +43,13 @@ class ScraperDriver:
         if self.use_shell:
             source = self.page_source
             results = []
-            if "a" in value or "title" in value:
-                # Regex robust untuk mencari judul berita di Bing News
+            if "a" in value or "h2" in value or "h3" in value:
+                # Regex robust untuk mencari judul dan link di Bing
                 patterns = [
-                    r'<a[^>]+href="([^"]+)"[^>]*>(.*?)</a>',
-                    r'<h3[^>]*>.*?<a[^>]+href="([^"]+)"[^>]*>(.*?)</a>.*?</h3>'
+                    r'<h2[^>]*>.*?<a[^>]+href="([^"]+)"[^>]*>(.*?)</a>.*?</h2>',
+                    r'<h3[^>]*>.*?<a[^>]+href="([^"]+)"[^>]*>(.*?)</a>.*?</h3>',
+                    r'<a[^>]+class="title"[^>]+href="([^"]+)"[^>]*>(.*?)</a>',
+                    r'<a[^>]+href="([^"]+)"[^>]*>(.*?)</a>'
                 ]
                 
                 seen_links = set()
@@ -58,8 +60,9 @@ class ScraperDriver:
                         content = match[1] if isinstance(match, tuple) else ""
                         
                         clean_title = re.sub(r'<[^>]+>', '', content).strip()
-                        if clean_title and len(clean_title) > 25 and link not in seen_links:
-                            if "http" in link and "bing.com/news" not in link:
+                        # Judul web bisa lebih pendek dari berita, tapi kita tetap butuh yang informatif
+                        if clean_title and len(clean_title) > 15 and link not in seen_links:
+                            if "http" in link and "bing.com/search" not in link and "bing.com/images" not in link:
                                 results.append(DummyElement(clean_title, link))
                                 seen_links.add(link)
                 return results

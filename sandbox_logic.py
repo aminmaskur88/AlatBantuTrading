@@ -7,7 +7,7 @@ import requests
 from scraper import get_driver, scrape_stock_data, get_coingecko_data
 from news_scraper import scrape_news
 from formatter import clean_data, enrich_data
-from utils import setup_logging, get_api_keys, move_key_to_bottom
+from utils import setup_logging, get_api_keys, move_key_to_bottom, save_json
 
 # Konfigurasi Database & Bot (ONLY BTC - AGGRESSIVE SCALPER)
 DB_PATH = "data/trades.db"
@@ -30,6 +30,20 @@ def init_db():
     cur.execute("INSERT OR IGNORE INTO portfolio (id, balance, initial_capital) VALUES (1, 1000.0, 1000.0)")
     conn.commit()
     conn.close()
+
+def reset_sandbox_data():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    # Reset Portfolio to 1000
+    cur.execute("UPDATE portfolio SET balance = 1000.0, initial_capital = 1000.0 WHERE id = 1")
+    # Clear other tables
+    cur.execute("DELETE FROM holdings")
+    cur.execute("DELETE FROM trades")
+    cur.execute("DELETE FROM logs")
+    cur.execute("DELETE FROM orders")
+    conn.commit()
+    conn.close()
+    save_log("🔄 Sandbox has been reset to initial state.")
 
 def save_log(message):
     try:
@@ -102,7 +116,10 @@ def run_bot_iteration(watchlist=None):
     init_db()
     api_keys = get_api_keys()
     if not api_keys: return {"error": "API Key missing"}
-    watchlist = WATCHLIST # Force ONLY BTC-USD
+    
+    if not watchlist or not any(watchlist):
+        watchlist = ["BTC-USD", "ETH-USD", "SOL-USD"]
+        
     balance, _, holdings_list = get_portfolio()
     holdings_dict = {h['symbol']: h for h in holdings_list}
     pending_orders = get_pending_orders()
@@ -137,8 +154,23 @@ def run_bot_iteration(watchlist=None):
                 # 2. New Analysis
                 if not any(o['symbol'] == symbol for o in get_pending_orders()):
                     enriched = enrich_data(clean_data(raw_data))
-                    qty_owned = holdings_dict.get(symbol, {}).get('quantity', 0)
-                    prompt = f"ROLE: Aggressive BTC Scalper. Balance ${balance}, Owned: {qty_owned}. DATA: {json.dumps(enriched)}. TASK: Create Plan. If owned=0, only BUY or NONE. If owned>0, only SELL or NONE. Profit Target: 0.5%-1.2%. Stop Loss: 0.8%. OUTPUT JSON: " + '{"side": "BUY/SELL/NONE", "target_price": float, "tp_price": float, "sl_price": float, "units": float, "reason": "string"}'
+                    holding = holdings_dict.get(symbol, {})
+                    qty_owned = holding.get('quantity', 0)
+                    avg_price = holding.get('avg_price', 0)
+                    
+                    status_context = f"Owned: {qty_owned} units at avg price ${avg_price:,.2f}." if qty_owned > 0 else "No current position."
+                    
+                    prompt = (
+                        f"ROLE: Professional Crypto Scalper. Balance: ${balance:,.2f}. Asset: {symbol}. {status_context} "
+                        f"DATA: {json.dumps(enriched)}. "
+                        "TASK: Analyze data and provide a trade plan. "
+                        "If no position: Consider 'BUY' or 'NONE'. "
+                        "If position exists: Consider 'SELL' (to take profit/cut loss) or 'NONE'. "
+                        "Strategy: Scalping (Target 0.5-2.0% profit, 1.0% stop loss). "
+                        "JSON OUTPUT ONLY: "
+                        '{"side": "BUY/SELL/NONE", "target_price": float, "tp_price": float, "sl_price": float, "units": float, "analysis": "brief market overview", "reason": "logic for trade"}'
+                    )
+                    
                     payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"responseMimeType": "application/json"}}
                     res_text = None
                     for api_key in api_keys:
@@ -149,11 +181,34 @@ def run_bot_iteration(watchlist=None):
                         except: continue
                     if res_text:
                         plan = json.loads(res_text); side = plan.get("side", "NONE").upper()
+                        
+                        # Save for modal compatibility
+                        formatted_ai = {
+                            "timestamp": datetime.datetime.now().isoformat(),
+                            "data": enriched,
+                            "ai_result": {
+                                "signal": side,
+                                "entry_price": plan.get("target_price", 0),
+                                "target_price": plan.get("tp_price", 0),
+                                "cut_loss_price": plan.get("sl_price", 0),
+                                "analysis": plan.get("analysis", ""),
+                                "reason": plan.get("reason", "")
+                            }
+                        }
+                        save_json(f"data/result/{symbol.upper()}.json", formatted_ai)
+
                         if side == "SELL" and qty_owned <= 0: side = "NONE"
                         if side != "NONE":
-                            conn = sqlite3.connect(DB_PATH); cur = conn.cursor()
-                            cur.execute("INSERT INTO orders (symbol, target_price, tp_price, sl_price, quantity, side, reason) VALUES (?, ?, ?, ?, ?, ?, ?)", (symbol, plan['target_price'], plan['tp_price'], plan['sl_price'], plan['units'], side, plan['reason']))
-                            conn.commit(); conn.close(); add_log(f"📝 BTC Scalp Plan: {side} at ${plan['target_price']:,.2f}")
+                            # Basic unit safety check for buying
+                            units = plan.get('units', 0)
+                            if side == "BUY":
+                                max_units = (balance * 0.95) / current_price # Use max 95% of balance
+                                units = min(units, max_units)
+                                
+                            if units > 0:
+                                conn = sqlite3.connect(DB_PATH); cur = conn.cursor()
+                                cur.execute("INSERT INTO orders (symbol, target_price, tp_price, sl_price, quantity, side, reason) VALUES (?, ?, ?, ?, ?, ?, ?)", (symbol, plan['target_price'], plan['tp_price'], plan['sl_price'], units, side, plan['reason']))
+                                conn.commit(); conn.close(); add_log(f"📝 {symbol} Plan: {side} {units:,.4f} at ${plan['target_price']:,.2f}")
                 time.sleep(0.5)
             except: continue
         return {"status": "success", "logs": logs}

@@ -11,20 +11,24 @@ DB_PATH = "data/trades.db"
 # Inisialisasi DB saat start
 init_db()
 
-# Auto-Pilot Global Variable
+# Auto-Pilot Global Variables
 auto_pilot_enabled = False
+auto_pilot_watchlist = ["BTC-USD", "ETH-USD", "SOL-USD"]
+last_run_time = None
 
 def auto_pilot_loop():
-    global auto_pilot_enabled
+    global auto_pilot_enabled, auto_pilot_watchlist, last_run_time
     while True:
         if auto_pilot_enabled:
-            print("--- Auto-Pilot: Scanning Market ---")
+            print(f"--- Auto-Pilot: Scanning Market for {', '.join(auto_pilot_watchlist)} ---")
             try:
-                run_bot_iteration()
+                run_bot_iteration(watchlist=auto_pilot_watchlist)
+                last_run_time = datetime.datetime.now().isoformat()
             except Exception as e:
                 print(f"Auto-Pilot Error: {e}")
-        time.sleep(30) # Run every 30 seconds
+        time.sleep(60) # Run every 60 seconds for stability
 
+import datetime
 # Start background thread
 threading.Thread(target=auto_pilot_loop, daemon=True).start()
 
@@ -104,17 +108,77 @@ def run_bot_api():
 
 @app.route("/api/auto_pilot", methods=["POST"])
 def toggle_auto_pilot():
-    global auto_pilot_enabled
+    global auto_pilot_enabled, auto_pilot_watchlist
     data = request.json or {}
     auto_pilot_enabled = data.get("enabled", False)
+    
+    # Update watchlist if provided
+    if "watchlist" in data and isinstance(data["watchlist"], list):
+        auto_pilot_watchlist = [s.strip().upper() for s in data["watchlist"] if s.strip()]
+    
     status = "Enabled" if auto_pilot_enabled else "Disabled"
-    print(f"--- Auto-Pilot {status} ---")
-    return jsonify({"status": "success", "auto_pilot": auto_pilot_enabled})
+    print(f"--- Auto-Pilot {status} for {auto_pilot_watchlist} ---")
+    return jsonify({
+        "status": "success", 
+        "auto_pilot": auto_pilot_enabled, 
+        "watchlist": auto_pilot_watchlist
+    })
 
 @app.route("/api/auto_pilot_status")
 def get_auto_pilot_status():
-    global auto_pilot_enabled
-    return jsonify({"enabled": auto_pilot_enabled})
+    global auto_pilot_enabled, auto_pilot_watchlist, last_run_time
+    return jsonify({
+        "enabled": auto_pilot_enabled, 
+        "watchlist": auto_pilot_watchlist,
+        "last_run": last_run_time
+    })
+
+@app.route("/api/reset_sandbox", methods=["POST"])
+def reset_sandbox_api():
+    try:
+        from sandbox_logic import reset_sandbox_data
+        reset_sandbox_data()
+        return jsonify({"status": "success", "message": "Sandbox reset complete"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/asset_analysis/<symbol>")
+def asset_analysis_api(symbol):
+    try:
+        import os
+        import json
+        result_path = f"data/result/{symbol.upper()}.json"
+        if os.path.exists(result_path):
+            with open(result_path, 'r') as f:
+                data = json.load(f)
+                return jsonify(data)
+        return jsonify({"error": "No recent analysis found for this asset."}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Store chat histories per session/symbol
+sandbox_chat_sessions = {}
+
+@app.route("/api/sandbox_chat", methods=["POST"])
+def sandbox_chat_api():
+    data = request.json
+    symbol = data.get("symbol", "").strip().upper()
+    message = data.get("message", "").strip()
+    history = data.get("history", [])
+    
+    if not symbol or not message:
+        return jsonify({"error": "Invalid request"}), 400
+        
+    from utils import get_api_keys
+    from ai_analyzer import chat_with_gemini
+    api_keys = get_api_keys()
+    
+    try:
+        # Jika history kosong, kita anggap ini pesan pertama dan biarkan frontend yang kirim konteks
+        ai_reply, updated_history = chat_with_gemini(api_keys, history, message)
+        return jsonify({"reply": ai_reply, "history": updated_history})
+    except Exception as e:
+         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     print("\n--- Sandbox Server Running ---")

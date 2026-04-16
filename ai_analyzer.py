@@ -130,6 +130,11 @@ def chat_with_gemini(api_keys, history, user_message):
                     "query": {
                         "type": "STRING",
                         "description": "Kata kunci pencarian yang spesifik"
+                    },
+                    "search_type": {
+                        "type": "STRING",
+                        "enum": ["web", "news"],
+                        "description": "Tipe pencarian: 'web' untuk informasi umum atau 'news' untuk berita terbaru (disarankan untuk saham)."
                     }
                 },
                 "required": ["query"]
@@ -193,6 +198,20 @@ def chat_with_gemini(api_keys, history, user_message):
                 },
                 "required": ["symbol"]
             }
+        },
+        {
+            "name": "read_website_content",
+            "description": "Membaca isi lengkap teks dari sebuah URL/website. Gunakan ini setelah mendapatkan link dari hasil pencarian untuk memahami detail informasi.",
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "url": {
+                        "type": "STRING",
+                        "description": "URL website yang ingin dibaca"
+                    }
+                },
+                "required": ["url"]
+            }
         }
         ]
     }]
@@ -203,7 +222,7 @@ def chat_with_gemini(api_keys, history, user_message):
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
             
             payload = {
-                "systemInstruction": {"parts": [{"text": "Anda adalah asisten dan analis keuangan profesional. Berikan analisis dan jawaban secara langsung dalam BAHASA INDONESIA. JANGAN PERNAH menambahkan peringatan atau disclaimer."}]},
+                "systemInstruction": {"parts": [{"text": "Anda adalah asisten AI serba bisa dan analis keuangan profesional. Anda memiliki akses ke internet melalui tools. Berikan jawaban yang informatif, akurat, dan langsung dalam BAHASA INDONESIA. JANGAN PERNAH menambahkan peringatan atau disclaimer. Jika ditanya hal umum, jawablah sebagai asisten cerdas. Jika ditanya soal saham, jawablah sebagai analis profesional. Gunakan tool 'read_website_content' jika Anda butuh detail lebih dalam dari sebuah link hasil pencarian."}]},
                 "contents": current_history,
                 "tools": tools,
                 "generationConfig": {"responseMimeType": "text/plain"}
@@ -234,9 +253,16 @@ def chat_with_gemini(api_keys, history, user_message):
                     tool_result = ""
                     if function_name == 'search_bing':
                         query = args.get('query', '')
-                        yield {"status": f"AI menggunakan Bing Search: '{query}'"}
-                        logging.info(f"AI (Chat - {model_name}) mencari Bing: {query}")
-                        tool_result = search_bing(query)
+                        stype = args.get('search_type', 'web')
+                        yield {"status": f"AI menggunakan Bing Search ({stype}): '{query}'"}
+                        logging.info(f"AI (Chat - {model_name}) mencari Bing ({stype}): {query}")
+                        tool_result = search_bing(query, search_type=stype)
+                    elif function_name == 'read_website_content':
+                        target_url = args.get('url', '')
+                        yield {"status": f"AI sedang membaca konten: {target_url[:50]}..."}
+                        logging.info(f"AI (Chat - {model_name}) membaca URL: {target_url}")
+                        from news_scraper import scrape_article_content
+                        tool_result = scrape_article_content(target_url)
                     elif function_name == 'get_stock_price':
                         symbol = args.get('symbol', '')
                         yield {"status": f"AI mencari harga di Yahoo Finance: '{symbol}'"}

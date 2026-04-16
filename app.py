@@ -120,23 +120,30 @@ def analyze():
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.json
-    symbol = data.get("symbol", "").strip().upper()
+    symbol = data.get("symbol", "").strip().upper() or "GENERAL"
     message = data.get("message", "").strip()
     # Terima history dari client jika ada
     client_history = data.get("history")
     
-    if not symbol or not message:
-        return jsonify({"error": "Invalid request"}), 400
+    if not message:
+        return jsonify({"error": "Pesan tidak boleh kosong"}), 400
 
     def generate_chat_stream():
-        # ... (refresh commands logic)
-        
         # Gunakan history dari client, jika tidak ada baru ambil dari memori server
         history = client_history if client_history else chat_sessions.get(symbol)
         
         if not history:
-            yield f"data: {json.dumps({'status': 'Error: Sesi chat belum dimulai.', 'error': 'Sesi chat belum dimulai.', 'done': True})}\n\n"
-            return
+            if symbol == "GENERAL":
+                # Initialize a general chat session if it doesn't exist
+                now_str = datetime.datetime.now().strftime("%A, %d %B %Y %H:%M:%S")
+                history = [
+                    {"role": "user", "parts": [{"text": f"WAKTU SEKARANG: {now_str}\nKamu adalah asisten AI serba bisa yang terintegrasi dengan mesin pencari. Kamu bisa membantu menjawab pertanyaan apa saja, melakukan riset di internet, dan memberikan analisis. Gunakan Bahasa Indonesia."}]},
+                    {"role": "model", "parts": [{"text": "Halo! Saya asisten AI Anda. Ada yang bisa saya bantu hari ini? Saya bisa mencari informasi apa pun di internet untuk Anda."}]}
+                ]
+                chat_sessions["GENERAL"] = history
+            else:
+                yield f"data: {json.dumps({'status': 'Error: Sesi chat belum dimulai.', 'error': 'Sesi chat belum dimulai.', 'done': True})}\n\n"
+                return
             
         api_keys = get_api_keys()
         if not api_keys:
@@ -203,6 +210,15 @@ def sync_chat():
     symbol = data.get("symbol", "").strip().upper()
     if not symbol:
         return jsonify({"error": "Symbol is required"}), 400
+
+    if symbol == "GENERAL":
+        now_str = datetime.datetime.now().strftime("%A, %d %B %Y %H:%M:%S")
+        chat_sessions["GENERAL"] = [
+            {"role": "user", "parts": [{"text": f"WAKTU SEKARANG: {now_str}\nKamu adalah asisten AI serba bisa yang terintegrasi dengan mesin pencari. Kamu bisa membantu menjawab pertanyaan apa saja, melakukan riset di internet, dan memberikan analisis. Gunakan Bahasa Indonesia."}]},
+            {"role": "model", "parts": [{"text": "Halo! Saya asisten AI Anda. Ada yang bisa saya bantu hari ini? Saya bisa mencari informasi apa pun di internet untuk Anda."}]}
+        ]
+        logging.info("General chat session has been synced/re-initialized.")
+        return jsonify({"status": "ok"})
 
     company_name = all_stocks.get(symbol, "Perusahaan Tidak Diketahui")
     is_indo = symbol in all_stocks
