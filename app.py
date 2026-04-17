@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 import logging
 import time
 import datetime
 import csv
+import json
+import sqlite3
+import os
 from utils import setup_logging, save_json, get_api_keys
 from scraper import get_driver, scrape_stock_data
 from news_scraper import scrape_news
@@ -22,8 +25,49 @@ try:
 except FileNotFoundError:
     logging.warning("indonesia.csv tidak ditemukan, validasi nama perusahaan dilewati.")
 
-# Store chat histories per session/symbol
-chat_sessions = {}
+# Store chat histories per session/symbol using SQLite
+os.makedirs('data', exist_ok=True)
+def init_db():
+    conn = sqlite3.connect('data/chat.db', check_same_thread=False)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS chat_sessions (symbol TEXT PRIMARY KEY, history TEXT)''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+def get_chat_history(symbol):
+    try:
+        conn = sqlite3.connect('data/chat.db', check_same_thread=False)
+        c = conn.cursor()
+        c.execute("SELECT history FROM chat_sessions WHERE symbol=?", (symbol,))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            return json.loads(row[0])
+    except Exception as e:
+        logging.error(f"DB Error: {e}")
+    return None
+
+def save_chat_history(symbol, history):
+    try:
+        conn = sqlite3.connect('data/chat.db', check_same_thread=False)
+        c = conn.cursor()
+        c.execute("REPLACE INTO chat_sessions (symbol, history) VALUES (?, ?)", (symbol, json.dumps(history)))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logging.error(f"DB Error: {e}")
+
+def clear_chat_history(symbol):
+    try:
+        conn = sqlite3.connect('data/chat.db', check_same_thread=False)
+        c = conn.cursor()
+        c.execute("DELETE FROM chat_sessions WHERE symbol=?", (symbol,))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logging.error(f"DB Error: {e}")
 
 @app.route("/")
 def index():
@@ -91,10 +135,10 @@ def run_full_analysis(symbol):
             f"Berita Terbaru: {json.dumps(enriched.get('news', []))}.\n"
             "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal dan fundamental presisi di atas. JANGAN katakan kamu tidak bisa atau tidak punya info hari ini, karena data di atas adalah data TERBARU (real-time)."
         )
-        chat_sessions[symbol] = [
+        save_chat_history(symbol, [
             {"role": "user", "parts": [{"text": initial_context}]},
             {"role": "model", "parts": [{"text": "Baik, saya mengerti konteks saham ini. Silakan tanyakan apa saja."}]}
-        ]
+        ])
         
         return final_result
         
@@ -130,7 +174,7 @@ def chat():
 
     def generate_chat_stream():
         # Gunakan history dari client, jika tidak ada baru ambil dari memori server
-        history = client_history if client_history else chat_sessions.get(symbol)
+        history = client_history if client_history else get_chat_history(symbol)
         
         if not history:
             if symbol == "GENERAL":
@@ -140,7 +184,7 @@ def chat():
                     {"role": "user", "parts": [{"text": f"WAKTU SEKARANG: {now_str}\nKamu adalah asisten AI serba bisa yang terintegrasi dengan mesin pencari. Kamu bisa membantu menjawab pertanyaan apa saja, melakukan riset di internet, dan memberikan analisis. Gunakan Bahasa Indonesia."}]},
                     {"role": "model", "parts": [{"text": "Halo! Saya asisten AI Anda. Ada yang bisa saya bantu hari ini? Saya bisa mencari informasi apa pun di internet untuk Anda."}]}
                 ]
-                chat_sessions["GENERAL"] = history
+                save_chat_history("GENERAL", history)
             else:
                 yield f"data: {json.dumps({'status': 'Error: Sesi chat belum dimulai.', 'error': 'Sesi chat belum dimulai.', 'done': True})}\n\n"
                 return
@@ -180,7 +224,7 @@ def chat():
                             if body:
                                 body_text = body.get_text(separator=' ', strip=True)
                                 cleaned_text = ' '.join(body_text.split())
-                                extracted_contents.append(f"KONTEN DARI URL {url}:\n{cleaned_text[:6000]}")
+                                extracted_contents.append(f"KONTEN DARI URL {url}:\n{cleaned_text[:3000]}")
                             else:
                                 extracted_contents.append(f"KONTEN DARI URL {url}:\n[Gagal memuat: Tag <body> tidak ditemukan]")
                         except Exception as e:
@@ -195,8 +239,8 @@ def chat():
                 if "status" in update:
                     yield f"data: {json.dumps({'status': update['status']})}\n\n"
                 if "reply" in update:
-                    chat_sessions[symbol] = update["history"]
-                    yield f"data: {json.dumps({'reply': update['reply'], 'done': True})}\n\n"
+                    save_chat_history(symbol, update["history"])
+                    yield f"data: {json.dumps({'reply': update['reply'], 'history': update['history'], 'done': True})}\n\n"
 
         except Exception as e:
             logging.error(f"Error di backend chat stream: {str(e)}")
@@ -213,10 +257,10 @@ def sync_chat():
 
     if symbol == "GENERAL":
         now_str = datetime.datetime.now().strftime("%A, %d %B %Y %H:%M:%S")
-        chat_sessions["GENERAL"] = [
+        save_chat_history("GENERAL", [
             {"role": "user", "parts": [{"text": f"WAKTU SEKARANG: {now_str}\nKamu adalah asisten AI serba bisa yang terintegrasi dengan mesin pencari. Kamu bisa membantu menjawab pertanyaan apa saja, melakukan riset di internet, dan memberikan analisis. Gunakan Bahasa Indonesia."}]},
             {"role": "model", "parts": [{"text": "Halo! Saya asisten AI Anda. Ada yang bisa saya bantu hari ini? Saya bisa mencari informasi apa pun di internet untuk Anda."}]}
-        ]
+        ])
         logging.info("General chat session has been synced/re-initialized.")
         return jsonify({"status": "ok"})
 
@@ -245,15 +289,64 @@ def sync_chat():
         f"Fundamental/Stats: High 52W: {enriched.get('stats', {}).get('high_52')}, Low 52W: {enriched.get('stats', {}).get('low_52')}, Cap: {enriched.get('stats', {}).get('market_cap')}.\n"
         "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal dan fundamental presisi di atas. JANGAN katakan kamu tidak punya info hari ini."
     )
-    chat_sessions[symbol] = [
+    save_chat_history(symbol, [
         {"role": "user", "parts": [{"text": initial_context}]},
         {"role": "model", "parts": [{"text": "Baik, saya mengerti konteks saham ini. Silakan tanyakan apa saja."}]}
-    ]
+    ])
     logging.info(f"Chat session for {symbol} has been synced/re-initialized.")
     return jsonify({"status": "ok"})
 
-from flask import Flask, render_template, request, jsonify, Response, stream_with_context
-import json
+@app.route("/api/chat/clear", methods=["POST"])
+def api_clear_chat():
+    data = request.json
+    symbol = data.get("symbol", "").strip().upper()
+    if symbol:
+        clear_chat_history(symbol)
+        return jsonify({"status": "ok"})
+    return jsonify({"error": "Symbol is required"}), 400
+
+@app.route("/api/history/list", methods=["GET"])
+def list_history():
+    try:
+        conn = sqlite3.connect('data/chat.db', check_same_thread=False)
+        c = conn.cursor()
+        c.execute("SELECT symbol FROM chat_sessions")
+        symbols = [row[0] for row in c.fetchall()]
+        conn.close()
+        
+        results = []
+        for s in symbols:
+            if s == "GENERAL": continue
+            # Cari nama perusahaan dari file result jika ada
+            name = s
+            try:
+                with open(f"data/result/{s}.json", "r") as f:
+                    res_data = json.load(f)
+                    name = res_data.get("data", {}).get("company_name", s)
+            except: pass
+            results.append({"symbol": s, "name": name})
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/history/get/<symbol>", methods=["GET"])
+def get_history_detail(symbol):
+    symbol = symbol.upper()
+    history = get_chat_history(symbol)
+    if not history:
+        return jsonify({"error": "Not found"}), 404
+        
+    # Ambil juga data analisis terakhir
+    analysis_data = None
+    try:
+        with open(f"data/result/{symbol}.json", "r") as f:
+            analysis_data = json.load(f)
+    except: pass
+    
+    return jsonify({
+        "history": history,
+        "analysis": analysis_data
+    })
 
 @app.route("/api/refresh_news", methods=["POST"])
 def refresh_news():
@@ -333,7 +426,7 @@ def more_news():
                  yield f"data: {json.dumps({'status': 'Gagal mengambil isi konten berita.'})}\n\n"
                  return
 
-            history = chat_sessions.get(symbol)
+            history = get_chat_history(symbol)
             if not history:
                 yield f"data: {json.dumps({'error': 'Sesi chat tidak ditemukan'})}\n\n"
                 return
@@ -381,7 +474,7 @@ def more_news():
                     "JSON harus mencerminkan analisa terbaru dari isi web yang dibaca tadi."
                 )
                 final_ai_reply, history = chat_with_gemini(api_keys, history, prompt_2)
-                chat_sessions[symbol] = history
+                save_chat_history(symbol, history)
                 
                 json_match = re.search(r'<JSON>(.*?)</JSON>', final_ai_reply, re.DOTALL)
                 if not json_match:

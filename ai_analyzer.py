@@ -48,7 +48,7 @@ def analyze_with_gemini(api_keys, data):
     - Terendah 52 Minggu: {data.get('stats', {}).get('low_52')}
     - Market Cap: {data.get('stats', {}).get('market_cap')}
     
-    Data Historis Close (90 hari): {json.dumps(data.get('history', [])[-30:])} (ditampilkan 30 hari terakhir)
+    Data Historis Close (14 hari terakhir): {json.dumps([{'date': d.get('date'), 'close': d.get('close')} for d in data.get('history', [])[-14:]])}
     
     {holdings_str} 
     
@@ -56,10 +56,15 @@ def analyze_with_gemini(api_keys, data):
     {json.dumps(data.get('news', []), indent=2, ensure_ascii=False)}
     
     Tugas Anda:
-    1. Lakukan Analisis Teknikal & Fundamental Mendalam: Gunakan level Fibonacci dan statistik 52 minggu di atas untuk menentukan area beli/jual yang logis.
-    2. Identifikasi pola chart (misal: Double Bottom, Breakout, Sideways) dari data historis.
-    3. Anda SEKARANG MEMILIKI data matematis yang cukup. JANGAN katakan Anda tidak bisa melakukan analisis teknikal atau menghitung target harga.
-    4. Berikan angka presisi untuk: Harga Beli (Entry), Target Penjualan (TP), dan Cut Loss (CL).
+    1. Terapkan kerangka penalaran DIKW (Data, Information, Knowledge, Wisdom) secara eksplisit dalam pemikiran analisis Anda:
+       - Data: Ekstrak fakta mentah dari angka-angka yang diberikan (harga, volume, indikator).
+       - Information: Kontekstualisasikan data tersebut (tren saat ini, level kunci support/resistance).
+       - Knowledge: Pahami pola dan implikasinya (pola chart, konfirmasi sinyal, hubungan teknikal & fundamental).
+       - Wisdom: Hasilkan keputusan (Actionable Insight) dengan strategi entry, exit, dan manajemen risiko yang terukur.
+    2. Lakukan Analisis Teknikal & Fundamental Mendalam: Gunakan level Fibonacci dan statistik 52 minggu di atas untuk menentukan area beli/jual yang logis.
+    3. Identifikasi pola chart (misal: Double Bottom, Breakout, Sideways) dari data historis.
+    4. Anda SEKARANG MEMILIKI data matematis yang cukup. JANGAN katakan Anda tidak bisa melakukan analisis teknikal atau menghitung target harga.
+    5. Berikan angka presisi untuk: Harga Beli (Entry), Target Penjualan (TP), dan Cut Loss (CL).
     
     PENTING: Format output Anda WAJIB berupa JSON murni dengan struktur berikut:
     {{
@@ -113,12 +118,50 @@ def analyze_with_gemini(api_keys, data):
                 
     return None
 
+def summarize_history(api_keys, history_to_summarize):
+    if not history_to_summarize: return "Tidak ada."
+    text_to_summarize = ""
+    for m in history_to_summarize:
+        if m.get("role") in ["user", "model"]:
+            role = "User" if m.get("role") == "user" else "AI"
+            if "parts" in m and len(m["parts"]) > 0 and "text" in m["parts"][0]:
+                text_to_summarize += f"{role}: {m['parts'][0]['text'][:300]}\n"
+            
+    prompt = f"Buatkan ringkasan sangat singkat (maksimal 2 paragraf) dari inti percakapan saham berikut agar asisten tetap ingat konteksnya:\n\n{text_to_summarize}"
+    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+    headers = {"Content-Type": "application/json"}
+    for api_key in api_keys:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
+        try:
+            res = requests.post(url, headers=headers, json=payload, timeout=10)
+            if res.status_code == 200:
+                return res.json()['candidates'][0]['content']['parts'][0]['text']
+        except: continue
+    return "Percakapan sebelumnya membahas analisis teknikal dan fundamental saham."
+
 def chat_with_gemini(api_keys, history, user_message):
-    if isinstance(api_keys, str):
-        api_keys = [api_keys]
+    if isinstance(api_keys, str): api_keys = [api_keys]
+    
+    # Tambahkan pesan user baru ke history asli (untuk disimpan di DB nanti)
+    full_history = history + [{"role": "user", "parts": [{"text": user_message}]}]
+    
+    # Buat versi "API History" (yang diringkas jika terlalu panjang)
+    api_history = full_history[:]
+    if len(api_history) > 20:
+        yield {"status": "Meringkas memori untuk menghemat token..."}
+        # Sisakan index 0 (konteks), 1 (summary lama jika ada), dan 6 chat terakhir
+        context_msg = api_history[0]
+        recent_msgs = api_history[-6:]
+        to_summarize = api_history[1:-6]
+        
+        summary = summarize_history(api_keys, to_summarize)
+        api_history = [
+            context_msg,
+            {"role": "user", "parts": [{"text": f"[Sistem: Ringkasan obrolan lama] {summary}"}]},
+            {"role": "model", "parts": [{"text": "Baik, saya simpan ringkasan tersebut dalam memori saya."}]}
+        ] + recent_msgs
         
     headers = {"Content-Type": "application/json"}
-    current_history = history + [{"role": "user", "parts": [{"text": user_message}]}]
     
     tools = [{
         "functionDeclarations": [{
@@ -223,7 +266,7 @@ def chat_with_gemini(api_keys, history, user_message):
             
             payload = {
                 "systemInstruction": {"parts": [{"text": "Anda adalah asisten AI serba bisa dan analis keuangan profesional. Anda memiliki akses ke internet melalui tools. Berikan jawaban yang informatif, akurat, dan langsung dalam BAHASA INDONESIA. JANGAN PERNAH menambahkan peringatan atau disclaimer. Jika ditanya hal umum, jawablah sebagai asisten cerdas. Jika ditanya soal saham, jawablah sebagai analis profesional. Gunakan tool 'read_website_content' jika Anda butuh detail lebih dalam dari sebuah link hasil pencarian."}]},
-                "contents": current_history,
+                "contents": api_history,
                 "tools": tools,
                 "generationConfig": {"responseMimeType": "text/plain"}
             }
@@ -317,8 +360,8 @@ def chat_with_gemini(api_keys, history, user_message):
                         driver.quit()
                         tool_result = json.dumps(news) if news else "Tidak ada berita ditemukan."
                     
-                    current_history.append({"role": "model", "parts": [{"functionCall": function_call}]})
-                    current_history.append({
+                    api_history.append({"role": "model", "parts": [{"functionCall": function_call}]})
+                    api_history.append({
                         "role": "function",
                         "parts": [
                             {
@@ -330,7 +373,7 @@ def chat_with_gemini(api_keys, history, user_message):
                         ]
                     })
                     
-                    payload["contents"] = current_history
+                    payload["contents"] = api_history
                     yield {"status": "AI memproses hasil pencarian..."}
                     response = requests.post(url, headers=headers, json=payload, timeout=60)
                     response.raise_for_status()
@@ -338,7 +381,7 @@ def chat_with_gemini(api_keys, history, user_message):
                     part = result['candidates'][0]['content']['parts'][0]
                 
                 ai_reply = part.get('text', '').strip()
-                updated_history = current_history + [{"role": "model", "parts": [{"text": ai_reply}]}]
+                updated_history = full_history + [{"role": "model", "parts": [{"text": ai_reply}]}]
                 yield {"reply": ai_reply, "history": updated_history}
                 return
                 
@@ -347,4 +390,4 @@ def chat_with_gemini(api_keys, history, user_message):
                 yield {"status": f"Terjadi kendala teknis. Mencoba ulang..."}
                 continue
                 
-    yield {"reply": "Maaf, terjadi kesalahan pada semua model dan API Key.", "history": current_history}
+    yield {"reply": "Maaf, terjadi kesalahan pada semua model dan API Key.", "history": full_history}
