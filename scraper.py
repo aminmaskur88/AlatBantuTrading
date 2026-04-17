@@ -243,3 +243,38 @@ def get_driver():
     except Exception as e:
         logging.error(f"Gagal inisialisasi driver Selenium (Fallback Aktif): {e}")
         return ScraperDriver(None)
+
+def scrape_idnfinancials(symbol):
+    """
+    Scrape company profile and financial data from IDNFinancials using Selenium and BeautifulSoup.
+    """
+    try:
+        driver = get_driver()
+        driver.get(f"https://www.idnfinancials.com/id/{symbol}")
+        
+        # Wait for dynamic content to load
+        import time
+        time.sleep(4)
+        
+        html = driver.page_source
+        driver.quit()
+        
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        # We will extract readable text from the body, stripping out excessive whitespaces
+        # This provides Gemini with enough context to extract financial and profile data
+        if soup.body:
+            # Remove scripts and styles
+            for script in soup(["script", "style", "nav", "header", "footer"]):
+                script.extract()
+            
+            text = soup.body.get_text(separator=' ', strip=True)
+            # Limit text length to avoid token limits, IDNFinancials page has around 5k-15k characters of text usually.
+            # We take the first 15000 chars which should cover profile, stats, and recent news/dividends.
+            return text[:15000]
+        else:
+            return f"Gagal mengekstrak teks dari IDNFinancials untuk {symbol}."
+    except Exception as e:
+        logging.error(f"Error scraping IDNFinancials for {symbol}: {e}")
+        return f"Terjadi kesalahan saat mengambil data IDNFinancials: {str(e)}"

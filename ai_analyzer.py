@@ -48,7 +48,7 @@ def analyze_with_gemini(api_keys, data):
     - Terendah 52 Minggu: {data.get('stats', {}).get('low_52')}
     - Market Cap: {data.get('stats', {}).get('market_cap')}
     
-    Data Historis Close (14 hari terakhir): {json.dumps([{'date': d.get('date'), 'close': d.get('close')} for d in data.get('history', [])[-14:]])}
+    Data Historis Close (14 hari terakhir): {json.dumps(data.get('history', [])[-14:])}
     
     {holdings_str} 
     
@@ -147,12 +147,12 @@ def chat_with_gemini(api_keys, history, user_message):
     
     # Buat versi "API History" (yang diringkas jika terlalu panjang)
     api_history = full_history[:]
-    if len(api_history) > 20:
-        yield {"status": "Meringkas memori untuk menghemat token..."}
-        # Sisakan index 0 (konteks), 1 (summary lama jika ada), dan 6 chat terakhir
+    if len(api_history) > 40:
+        yield {"status": "Meringkas memori (setiap 20 chat) untuk menghemat token..."}
+        # Sisakan index 0 (konteks) dan 20 chat terakhir agar tetap akurat
         context_msg = api_history[0]
-        recent_msgs = api_history[-6:]
-        to_summarize = api_history[1:-6]
+        recent_msgs = api_history[-20:]
+        to_summarize = api_history[1:-20]
         
         summary = summarize_history(api_keys, to_summarize)
         api_history = [
@@ -255,6 +255,20 @@ def chat_with_gemini(api_keys, history, user_message):
                 },
                 "required": ["url"]
             }
+        },
+        {
+            "name": "get_idnfinancials_data",
+            "description": "Membaca profil perusahaan, data keuangan, dividen, dan metrik penting lainnya langsung dari IDNFinancials menggunakan Selenium. Sangat direkomendasikan untuk analisis fundamental mendalam.",
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "symbol": {
+                        "type": "STRING",
+                        "description": "Simbol saham, contoh: 'BBCA', 'TLKM'."
+                    }
+                },
+                "required": ["symbol"]
+            }
         }
         ]
     }]
@@ -265,7 +279,7 @@ def chat_with_gemini(api_keys, history, user_message):
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
             
             payload = {
-                "systemInstruction": {"parts": [{"text": "Anda adalah asisten AI serba bisa dan analis keuangan profesional. Anda memiliki akses ke internet melalui tools. Berikan jawaban yang informatif, akurat, dan langsung dalam BAHASA INDONESIA. JANGAN PERNAH menambahkan peringatan atau disclaimer. Jika ditanya hal umum, jawablah sebagai asisten cerdas. Jika ditanya soal saham, jawablah sebagai analis profesional. Gunakan tool 'read_website_content' jika Anda butuh detail lebih dalam dari sebuah link hasil pencarian."}]},
+                "systemInstruction": {"parts": [{"text": "Anda adalah asisten AI serba bisa dan analis keuangan profesional. Anda memiliki akses ke internet melalui tools. Berikan jawaban yang informatif, akurat, dan langsung dalam BAHASA INDONESIA. JANGAN PERNAH menambahkan peringatan atau disclaimer. Jika ditanya hal umum, jawablah sebagai asisten cerdas. Jika ditanya soal saham, jawablah sebagai analis profesional. Gunakan tool 'read_website_content' jika Anda butuh detail lebih dalam dari sebuah link hasil pencarian. PENTING: Jika Anda butuh data (seperti IDNFinancials, harga, dsb), LANGSUNG PANGGIL TOOL yang relevan. JANGAN PERNAH merespons dengan kata-kata seperti 'Mohon tunggu', 'Saya sedang mengambil data', atau sejenisnya. Anda harus langsung mengaktifkan tool tersebut!"}]},
                 "contents": api_history,
                 "tools": tools,
                 "generationConfig": {"responseMimeType": "text/plain"}
@@ -286,10 +300,15 @@ def chat_with_gemini(api_keys, history, user_message):
                 
                 response.raise_for_status()
                 result = response.json()
-                part = result['candidates'][0]['content']['parts'][0]
+                parts = result['candidates'][0]['content']['parts']
                 
-                if 'functionCall' in part:
-                    function_call = part['functionCall']
+                function_call = None
+                for p in parts:
+                    if 'functionCall' in p:
+                        function_call = p['functionCall']
+                        break
+                
+                if function_call:
                     function_name = function_call.get('name', '')
                     args = function_call.get('args', {})
                     
@@ -359,6 +378,15 @@ def chat_with_gemini(api_keys, history, user_message):
                         news = scrape_news(symbol, driver)
                         driver.quit()
                         tool_result = json.dumps(news) if news else "Tidak ada berita ditemukan."
+                        
+                    elif function_name == 'get_idnfinancials_data':
+                        symbol = args.get('symbol', '')
+                        yield {"status": f"AI sedang membaca data IDNFinancials untuk {symbol} melalui Selenium..."}
+                        from scraper import scrape_idnfinancials
+                        
+                        # Remove .JK if exists since IDNFinancials expects bare symbol (e.g., BBCA)
+                        clean_symbol = symbol.replace('.JK', '').replace('.jk', '')
+                        tool_result = scrape_idnfinancials(clean_symbol)
                     
                     api_history.append({"role": "model", "parts": [{"functionCall": function_call}]})
                     api_history.append({
@@ -378,9 +406,9 @@ def chat_with_gemini(api_keys, history, user_message):
                     response = requests.post(url, headers=headers, json=payload, timeout=60)
                     response.raise_for_status()
                     result = response.json()
-                    part = result['candidates'][0]['content']['parts'][0]
+                    parts = result['candidates'][0]['content']['parts']
                 
-                ai_reply = part.get('text', '').strip()
+                ai_reply = "".join([p.get('text', '') for p in parts]).strip()
                 updated_history = full_history + [{"role": "model", "parts": [{"text": ai_reply}]}]
                 yield {"reply": ai_reply, "history": updated_history}
                 return
