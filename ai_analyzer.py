@@ -13,12 +13,25 @@ MODELS = [
     "gemini-2.5-pro"
 ]
 
-def analyze_with_gemini(api_keys, data):
+def analyze_with_gemini(api_keys, data, history=None):
     if isinstance(api_keys, str):
         api_keys = [api_keys]
         
     headers = {"Content-Type": "application/json"}
     
+    # Tambahkan konteks obrolan sebelumnya jika ada
+    chat_context = ""
+    if history and len(history) > 1:
+        # Ambil 6 pesan terakhir saja agar tidak terlalu panjang
+        relevant_history = history[-6:]
+        chat_context = "Konteks Obrolan Sebelumnya (untuk referensi preferensi user):\n"
+        for m in relevant_history:
+            role = "User" if m.get("role") == "user" else "AI"
+            text = m["parts"][0].get("text", "") if m.get("parts") else ""
+            if text and not text.startswith("WAKTU SEKARANG:") and not text.startswith("[Sistem:"):
+                chat_context += f"- {role}: {text[:200]}\n"
+        chat_context += "\n"
+
     holdings_str = ""
     if 'user_holdings' in data and data['user_holdings']:
         holdings_str = "Status Aset User:\nUser saat ini memiliki saham ini dengan rincian berikut:\n"
@@ -50,6 +63,7 @@ def analyze_with_gemini(api_keys, data):
     
     Data Historis Close (14 hari terakhir): {json.dumps(data.get('history', [])[-14:])}
     
+    {chat_context}
     {holdings_str} 
     
     Berita Terbaru:

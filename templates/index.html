@@ -15,14 +15,12 @@
             --shadow-canvas: 0 4px 15px rgba(0, 0, 0, 0.2);
             --buy: #10b981; --sell: #ef4444; --hold: #f59e0b;
         }
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-app: #111111; --bg-panel: #1e1e1e; --bg-workspace: #161616;
-                --border-color: #333333; --text-main: #e5e5e5; --text-muted: #888888;
-                --accent: #3b82f6; --accent-hover: #60a5fa; --item-hover: #262626;
-                --item-active: #2a3a50; --canvas-bg: #000000;
-                --shadow-canvas: 0 4px 20px rgba(0, 0, 0, 0.5);
-            }
+        body.dark-mode {
+            --bg-app: #111111; --bg-panel: #1e1e1e; --bg-workspace: #161616;
+            --border-color: #333333; --text-main: #e5e5e5; --text-muted: #888888;
+            --accent: #3b82f6; --accent-hover: #60a5fa; --item-hover: #262626;
+            --item-active: #2a3a50; --canvas-bg: #000000;
+            --shadow-canvas: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -178,6 +176,14 @@
             .large-chat-modal { padding: 0; }
             .large-chat-content { height: 100%; height: 100dvh; border-radius: 0; border: none; }
         }
+
+        /* Custom App Dialog Styles */
+        .app-dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); display: none; }
+        .app-dialog { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: dialogIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes dialogIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .app-dialog-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: var(--accent); }
+        .app-dialog-message { font-size: 14px; color: var(--text-main); line-height: 1.5; margin-bottom: 24px; }
+        .app-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; }
     </style>
 </head>
 <body>
@@ -188,6 +194,7 @@
             <span>AI Stock Analyzer Pro</span>
         </div>
         <div class="header-actions">
+            <button class="btn-icon" id="btnDarkMode" title="Toggle Dark Mode"><span class="material-icons-round">dark_mode</span></button>
             <button class="btn-icon" id="btnFullscreen" title="Fullscreen"><span class="material-icons-round">fullscreen</span></button>
         </div>
     </header>
@@ -326,7 +333,17 @@
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                 <div class="panel-card">
-                    <div class="panel-header"><span class="material-icons-round">psychology</span> Analisis Mendalam AI</div>
+                    <div class="panel-header" style="justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round">psychology</span> Analisis Mendalam AI
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span id="resTimestamp" style="font-size: 10px; opacity: 0.6; font-weight: 500;"></span>
+                            <button id="btnRefreshAnalysis" class="btn-primary" style="width: auto; padding: 4px 10px; font-size: 11px; height: 28px;">
+                                <span class="material-icons-round" style="font-size: 14px;">refresh</span> SEGARKAN
+                            </button>
+                        </div>
+                    </div>
                     <div id="resAnalysis" style="font-size: 13px; line-height: 1.6; white-space: pre-wrap; color: var(--text-main);"></div>
                     <div id="resReason" style="font-size: 12px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color); color: var(--text-muted); font-style: italic;"></div>
                 </div>
@@ -376,9 +393,79 @@
         </div>
     </div>
 
+    <div id="appDialogOverlay" class="app-dialog-overlay">
+        <div class="app-dialog">
+            <div id="appDialogTitle" class="app-dialog-title"></div>
+            <div id="appDialogMessage" class="app-dialog-message"></div>
+            <div class="app-dialog-actions">
+                <button id="appDialogCancel" class="btn-primary" style="background: var(--bg-app); color: var(--text-main); border: 1px solid var(--border-color); width: auto;">Batal</button>
+                <button id="appDialogConfirm" class="btn-primary" style="width: auto; min-width: 80px;">Oke</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Custom Dialog Logic
+        function showAppDialog({ title, message, showCancel = false }) {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('appDialogOverlay');
+                document.getElementById('appDialogTitle').innerHTML = title || 'Info';
+                document.getElementById('appDialogMessage').textContent = message;
+                const cancelBtn = document.getElementById('appDialogCancel');
+                const confirmBtn = document.getElementById('appDialogConfirm');
+                
+                cancelBtn.style.display = showCancel ? 'inline-block' : 'none';
+                overlay.style.display = 'flex';
+                
+                const handleConfirm = () => { overlay.style.display = 'none'; confirmBtn.onclick = null; cancelBtn.onclick = null; resolve(true); };
+                const handleCancel = () => { overlay.style.display = 'none'; confirmBtn.onclick = null; cancelBtn.onclick = null; resolve(false); };
+                
+                confirmBtn.onclick = handleConfirm;
+                cancelBtn.onclick = handleCancel;
+            });
+        }
+        
+        window.appAlert = (message) => showAppDialog({ 
+            title: '<span class="material-icons-round">info</span> Notifikasi', 
+            message 
+        });
+        window.appConfirm = (message) => showAppDialog({ 
+            title: '<span class="material-icons-round">help_outline</span> Konfirmasi', 
+            message, 
+            showCancel: true 
+        });
+
+        const chatBox = document.getElementById('chatBox');
         let currentSymbol = "";
         let priceInterval = null;
+
+        // Theme Management
+        const body = document.body;
+        const btnDarkMode = document.getElementById('btnDarkMode');
+        
+        function setTheme(isDark) {
+            if (isDark) {
+                body.classList.add('dark-mode');
+                btnDarkMode.querySelector('span').innerText = 'light_mode';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                btnDarkMode.querySelector('span').innerText = 'dark_mode';
+                localStorage.setItem('theme', 'light');
+            }
+            // Update TradingView if current symbol exists
+            if (typeof currentSymbol !== 'undefined' && currentSymbol) loadTradingViewWidget(currentSymbol);
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            setTheme(true);
+        }
+
+        btnDarkMode.addEventListener('click', () => {
+            setTheme(!body.classList.contains('dark-mode'));
+        });
 
         async function refreshPriceOnly() {
             if (!currentSymbol) return;
@@ -405,7 +492,6 @@
             }
         }
 
-        const chatBox = document.getElementById('chatBox');
         const largeChatModal = document.getElementById('largeChatModal');
         const largeChatBox = document.getElementById('largeChatBox');
         const largeChatInput = document.getElementById('largeChatInput');
@@ -428,7 +514,7 @@
             if (tvSymbol.length === 4 && !tvSymbol.includes(':') && !["AAPL", "TSLA", "MSFT", "AMZN", "META"].includes(tvSymbol)) {
                 tvSymbol = "IDX:" + tvSymbol;
             }
-            const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = document.body.classList.contains('dark-mode');
             document.getElementById('tradingview_chart').innerHTML = '';
             new TradingView.widget({
                 "container_id": "tradingview_chart", "symbol": tvSymbol, "interval": "D",
@@ -507,6 +593,13 @@
             document.getElementById('resAnalysis').textContent = aiRes.analysis;
             document.getElementById('resReason').innerHTML = `<b>Alasan AI:</b> ${aiRes.reason}`;
 
+            if (data.timestamp) {
+                const ts = new Date(data.timestamp);
+                document.getElementById('resTimestamp').textContent = `Update: ${ts.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}`;
+            } else {
+                document.getElementById('resTimestamp').textContent = '';
+            }
+
             const newsList = document.getElementById('resNewsList');
             newsList.innerHTML = '';
             if (resData.news && resData.news.length > 0) {
@@ -522,6 +615,9 @@
 
             if (data.chatHtml) {
                 chatBox.innerHTML = data.chatHtml;
+            } else if (chatBox.innerHTML.includes('user-message')) {
+                // Keep existing chat if we have actual messages and none provided in refresh
+                console.log("Preserving existing chat history UI");
             } else {
                 chatBox.innerHTML = `
                     <div class="message bot-message">
@@ -590,7 +686,7 @@
                 }
             } else if (e.target.classList.contains('delete-history-btn')) {
                 const symbol = e.target.dataset.symbol;
-                if (confirm(`Hapus riwayat analisis untuk saham ${symbol}?`)) {
+                if (await appConfirm(`Hapus riwayat analisis untuk saham ${symbol}?`)) {
                     sessionStorage.removeItem(`analysis_${symbol}`);
                     fetch('/api/chat/clear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol: symbol }) });
                     updateRecentAnalysesList();
@@ -605,12 +701,12 @@
             }
         });
 
-        document.getElementById('btnClearHistory').addEventListener('click', () => {
+        document.getElementById('btnClearHistory').addEventListener('click', async () => {
             if (!currentSymbol) {
-                alert('Silakan pilih saham terlebih dahulu atau hapus menggunakan tombol di daftar riwayat.');
+                await appAlert('Silakan pilih saham terlebih dahulu atau hapus menggunakan tombol di daftar riwayat.');
                 return;
             }
-            if (confirm(`Hapus riwayat analisis untuk saham ${currentSymbol.toUpperCase()}?`)) {
+            if (await appConfirm(`Hapus riwayat analisis untuk saham ${currentSymbol.toUpperCase()}?`)) {
                 sessionStorage.removeItem(`analysis_${currentSymbol.toUpperCase()}`);
                 fetch('/api/chat/clear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol: currentSymbol }) });
                 updateRecentAnalysesList();
@@ -676,6 +772,46 @@
             largeChatBox.scrollTop = largeChatBox.scrollHeight;
             saveChatToSession();
             } finally { btn.disabled = false; btn.innerHTML = orig; }
+        });
+
+        document.getElementById('btnRefreshAnalysis').addEventListener('click', async () => {
+            if (!currentSymbol) return;
+            if (!await appConfirm(`Segarkan analisis AI untuk ${currentSymbol}? Ini akan memakan waktu sekitar 10-20 detik.`)) return;
+            
+            const btn = document.getElementById('btnRefreshAnalysis');
+            btn.disabled = true;
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<span class="material-icons-round spin" style="font-size: 14px;">sync</span>';
+            
+            try {
+                const response = await fetch('/api/refresh_analysis', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ symbol: currentSymbol }) 
+                });
+                const data = await response.json();
+                if (data.error) {
+                    await appAlert("Gagal menyegarkan analisis: " + data.error);
+                } else {
+                    restoreState(data);
+                    const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                    const updateMsg = document.createElement('div');
+                    updateMsg.className = 'message bot-message';
+                    updateMsg.style.background = 'var(--accent)';
+                    updateMsg.style.color = 'white';
+                    updateMsg.innerHTML = `<div style="font-size: 10px; opacity: 0.8; margin-bottom: 4px;">${now}</div>✨ Analisis AI mendalam telah diperbarui berdasarkan data pasar terbaru.`;
+                    chatBox.appendChild(updateMsg);
+                    largeChatBox.appendChild(updateMsg.cloneNode(true));
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                    largeChatBox.scrollTop = largeChatBox.scrollHeight;
+                    saveChatToSession();
+                }
+            } catch (e) {
+                await appAlert("Terjadi kesalahan: " + e.message);
+            } finally { 
+                btn.disabled = false; 
+                btn.innerHTML = orig; 
+            }
         });
 
         document.getElementById('btnExpandChat').onclick = () => {

@@ -9,15 +9,25 @@
         :root {
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
+            --bg-app: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #f1f5f9;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --buy: #10b981;
+            --sell: #ef4444;
+            --hold: #f59e0b;
+            --glass: rgba(255, 255, 255, 0.7);
+        }
+
+        body.dark-mode {
             --bg-app: #0f172a;
             --bg-card: #1e293b;
             --bg-input: #0f172a;
             --border: #334155;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --buy: #10b981;
-            --sell: #ef4444;
-            --hold: #f59e0b;
             --glass: rgba(30, 41, 59, 0.7);
         }
 
@@ -30,6 +40,7 @@
             line-height: 1.6;
             height: 100vh;
             overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         /* Scrollbar Styling */
@@ -299,6 +310,9 @@
         </div>
         <div style="display: flex; gap: 12px; align-items: center;">
             <a href="/" class="nav-link"><span class="material-icons-round" style="font-size: 18px;">home</span> Back to Dashboard</a>
+            <button class="nav-link" id="btnDarkMode" style="background: none; border: 1px solid var(--border); cursor: pointer;" title="Toggle Dark Mode">
+                <span class="material-icons-round" style="font-size: 18px;">dark_mode</span>
+            </button>
             <button class="nav-link" id="btnFullscreen" style="background: none; border: 1px solid var(--border); cursor: pointer;">
                 <span class="material-icons-round" style="font-size: 18px;">fullscreen</span>
             </button>
@@ -426,6 +440,40 @@
 
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script>
+        // --- Theme Management ---
+        const body = document.body;
+        const btnDarkMode = document.getElementById('btnDarkMode');
+        
+        function setTheme(isDark) {
+            if (isDark) {
+                body.classList.add('dark-mode');
+                btnDarkMode.querySelector('span').innerText = 'light_mode';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                btnDarkMode.querySelector('span').innerText = 'dark_mode';
+                localStorage.setItem('theme', 'light');
+            }
+            // Update TradingView if current symbol exists
+            if (currentChartSymbol) {
+                const oldSymbol = currentChartSymbol;
+                currentChartSymbol = ""; // Reset to force redraw
+                updateChart(oldSymbol);
+            }
+        }
+
+        // Initialize theme - Default to dark for sandbox if not set
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) || !savedTheme) {
+            setTheme(true);
+        } else {
+            setTheme(false);
+        }
+
+        btnDarkMode.addEventListener('click', () => {
+            setTheme(!body.classList.contains('dark-mode'));
+        });
+
         // --- Fullscreen Logic ---
         const btnFullscreen = document.getElementById('btnFullscreen');
         btnFullscreen.addEventListener('click', () => {
@@ -453,16 +501,17 @@
                 else tvSymbol = `NASDAQ:${symbol}`;
             }
 
+            const isDark = document.body.classList.contains('dark-mode');
             new TradingView.widget({
                 "width": "100%",
                 "height": "350px",
                 "symbol": tvSymbol,
                 "interval": "15",
                 "timezone": "Asia/Jakarta",
-                "theme": "dark",
+                "theme": isDark ? "dark" : "light",
                 "style": "1",
                 "locale": "en",
-                "toolbar_bg": "#0f172a",
+                "toolbar_bg": isDark ? "#0f172a" : "#f8fafc",
                 "enable_publishing": false,
                 "allow_symbol_change": true,
                 "container_id": "tradingview_chart"

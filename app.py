@@ -31,10 +31,35 @@ def init_db():
     conn = sqlite3.connect('data/chat.db', check_same_thread=False)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS chat_sessions (symbol TEXT PRIMARY KEY, history TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS analysis_results (symbol TEXT PRIMARY KEY, result TEXT, updated_at DATETIME)''')
     conn.commit()
     conn.close()
 
 init_db()
+
+def get_analysis_result(symbol):
+    try:
+        conn = sqlite3.connect('data/chat.db', check_same_thread=False)
+        c = conn.cursor()
+        c.execute("SELECT result FROM analysis_results WHERE symbol=?", (symbol,))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            return json.loads(row[0])
+    except Exception as e:
+        logging.error(f"DB Error getting analysis: {e}")
+    return None
+
+def save_analysis_result(symbol, result):
+    try:
+        conn = sqlite3.connect('data/chat.db', check_same_thread=False)
+        c = conn.cursor()
+        c.execute("REPLACE INTO analysis_results (symbol, result, updated_at) VALUES (?, ?, ?)", 
+                  (symbol, json.dumps(result), datetime.datetime.now().isoformat()))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logging.error(f"DB Error saving analysis: {e}")
 
 def get_chat_history(symbol):
     try:
@@ -99,11 +124,14 @@ def run_full_analysis(symbol):
         save_json(f"data/clean/{symbol}.json", cleaned)
         enriched = enrich_data(cleaned)
         
+        # Ambil history chat untuk konteks analisis mendalam
+        history = get_chat_history(symbol)
+        
         logging.info(f"Mengirim data {symbol} ke Gemini API...")
         ai_result = None
         retry = 0
         while not ai_result and retry < 3:
-            ai_result = analyze_with_gemini(api_keys, enriched)
+            ai_result = analyze_with_gemini(api_keys, enriched, history=history)
             if not ai_result:
                 retry += 1
                 logging.warning(f"AI gagal, retry ({retry}/3)...")
@@ -118,6 +146,7 @@ def run_full_analysis(symbol):
             "ai_result": ai_result
         }
         save_json(f"data/result/{symbol}.json", final_result)
+        save_analysis_result(symbol, final_result)
         
         # Setup Chat Context
         now_str = datetime.datetime.now().strftime("%A, %d %B %Y %H:%M:%S")
@@ -135,10 +164,23 @@ def run_full_analysis(symbol):
             f"Berita Terbaru: {json.dumps(enriched.get('news', []))}.\n"
             "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal dan fundamental presisi di atas. JANGAN katakan kamu tidak bisa atau tidak punya info hari ini, karena data di atas adalah data TERBARU (real-time)."
         )
-        save_chat_history(symbol, [
-            {"role": "user", "parts": [{"text": initial_context}]},
-            {"role": "model", "parts": [{"text": "Baik, saya mengerti konteks saham ini. Silakan tanyakan apa saja."}]}
-        ])
+
+        existing_history = get_chat_history(symbol)
+        if existing_history and len(existing_history) >= 2:
+            # Jika history ada, perbarui context di pesan pertama tanpa menghapus sisanya
+            if "WAKTU SEKARANG:" in existing_history[0]['parts'][0].get('text', ''):
+                existing_history[0]['parts'][0]['text'] = initial_context
+                logging.info(f"Updated initial context for {symbol} while preserving history.")
+            else:
+                # Fallback: jika struktur berbeda, sisipkan context baru di awal
+                existing_history.insert(0, {"role": "model", "parts": [{"text": "Sistem: Data analisis telah diperbarui ke versi terbaru."}]})
+                existing_history.insert(0, {"role": "user", "parts": [{"text": initial_context}]})
+            save_chat_history(symbol, existing_history)
+        else:
+            save_chat_history(symbol, [
+                {"role": "user", "parts": [{"text": initial_context}]},
+                {"role": "model", "parts": [{"text": "Baik, saya mengerti konteks saham ini. Silakan tanyakan apa saja."}]}
+            ])
         
         return final_result
         
@@ -267,18 +309,24 @@ def sync_chat():
     company_name = all_stocks.get(symbol, "Perusahaan Tidak Diketahui")
     is_indo = symbol in all_stocks
     
-    # Logic to re-create the initial context, same as in /api/analyze
-    now_str = datetime.datetime.now().strftime("%A, %d %B %Y %H:%M:%S")
-    profile_info = f"Nama: {company_name}. Ticker: {symbol}."
-    if is_indo:
-        profile_info += f" Ini adalah perusahaan yang terdaftar di Bursa Efek Indonesia (BEI)."
+    # Update fresh price data for initial context
+    fresh_data = scrape_stock_data(symbol, is_indo=is_indo)
     
     # Attempt to load latest enriched data to provide some context
     try:
         with open(f"data/clean/{symbol}.json", "r") as f:
             enriched = json.load(f)
+        if fresh_data and fresh_data.get("price") != "0":
+            enriched["price"] = fresh_data["price"]
+            enriched["change"] = fresh_data["change"]
     except:
-        enriched = {}
+        enriched = fresh_data if fresh_data else {}
+
+    # Logic to re-create the initial context, same as in /api/analyze
+    now_str = datetime.datetime.now().strftime("%A, %d %B %Y %H:%M:%S")
+    profile_info = f"Nama: {company_name}. Ticker: {symbol}."
+    if is_indo:
+        profile_info += f" Ini adalah perusahaan yang terdaftar di Bursa Efek Indonesia (BEI)."
 
     initial_context = (
         f"WAKTU SEKARANG: {now_str}\n"
@@ -336,17 +384,59 @@ def get_history_detail(symbol):
     if not history:
         return jsonify({"error": "Not found"}), 404
         
-    # Ambil juga data analisis terakhir
-    analysis_data = None
+    # Ambil juga data analisis terakhir (utamakan dari DB)
+    analysis_data = get_analysis_result(symbol)
+    if not analysis_data:
+        try:
+            with open(f"data/result/{symbol}.json", "r") as f:
+                analysis_data = json.load(f)
+        except: pass
+    
+    # Update harga terbaru saat memuat chat
     try:
-        with open(f"data/result/{symbol}.json", "r") as f:
-            analysis_data = json.load(f)
-    except: pass
+        if analysis_data:
+            is_indo = symbol in all_stocks
+            fresh_data = scrape_stock_data(symbol, is_indo=is_indo)
+            if fresh_data and fresh_data.get("price") != "0":
+                analysis_data["data"]["price"] = fresh_data["price"]
+                analysis_data["data"]["change"] = fresh_data["change"]
+                # JANGAN update timestamp root di sini karena ini cuma refresh harga, bukan refresh analisis Gemini
+                save_json(f"data/result/{symbol}.json", analysis_data)
+                save_analysis_result(symbol, analysis_data)
+                logging.info(f"Price updated for {symbol} while loading history.")
+    except Exception as e:
+        logging.warning(f"Failed to update price for {symbol} on history load: {e}")
     
     return jsonify({
         "history": history,
         "analysis": analysis_data
     })
+
+@app.route("/api/refresh_analysis", methods=["POST"])
+def refresh_analysis():
+    data = request.json
+    symbol = data.get("symbol", "").strip().upper()
+    if not symbol:
+        return jsonify({"error": "Symbol is required"}), 400
+    try:
+        final_result = run_full_analysis(symbol)
+        return jsonify(final_result)
+    except Exception as e:
+        logging.error(f"Error refreshing analysis for {symbol}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/analysis/<symbol>", methods=["GET"])
+def get_analysis_only(symbol):
+    symbol = symbol.upper()
+    analysis_data = get_analysis_result(symbol)
+    if not analysis_data:
+        try:
+            with open(f"data/result/{symbol}.json", "r") as f:
+                analysis_data = json.load(f)
+        except:
+            return jsonify({"error": "Analysis not found"}), 404
+    return jsonify(analysis_data)
 
 @app.route("/api/refresh_news", methods=["POST"])
 def refresh_news():
