@@ -537,7 +537,10 @@
                     const role = msg.role === 'user' ? 'user' : 'bot';
                     const label = msg.role === 'user' ? 'Anda' : 'AI';
                     const timeLabel = msg.time ? msg.time : label;
-                    const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                    // Strip [HH:MM] or [DD Mon YYYY HH:MM] if it appears at the very beginning of the text
+                    const cleanedText = text.replace(/^\[\d{1,2} [A-Za-z]{3} \d{4} \d{2}:\d{2}\] /, '')
+                                           .replace(/^\[\d{2}:\d{2}\] /, '');
+                    const formatted = cleanedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                     html += `<div class="message ${role}-message">
                                 <div style="font-size: 10px; opacity: 0.6; margin-bottom: 4px;">${timeLabel}</div>
                                 ${formatted}
@@ -883,7 +886,9 @@
                                     const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                                     const div = document.createElement('div');
                                     div.className = 'message bot-message';
-                                    const formatted = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                                    const cleanedReply = data.reply.replace(/^\[\d{1,2} [A-Za-z]{3} \d{4} \d{2}:\d{2}\] /, '')
+                                                                  .replace(/^\[\d{2}:\d{2}\] /, '');
+                                    const formatted = cleanedReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                                     div.innerHTML = `<div style="font-size: 10px; opacity: 0.6; margin-bottom: 4px;">${now}</div>${formatted}`;
                                     chatBox.appendChild(div.cloneNode(true));
                                     largeChatBox.appendChild(div);
