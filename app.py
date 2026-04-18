@@ -173,13 +173,15 @@ def run_full_analysis(symbol):
                 logging.info(f"Updated initial context for {symbol} while preserving history.")
             else:
                 # Fallback: jika struktur berbeda, sisipkan context baru di awal
-                existing_history.insert(0, {"role": "model", "parts": [{"text": "Sistem: Data analisis telah diperbarui ke versi terbaru."}]})
-                existing_history.insert(0, {"role": "user", "parts": [{"text": initial_context}]})
+                now_time = datetime.datetime.now().strftime("%H:%M")
+                existing_history.insert(0, {"role": "model", "time": now_time, "parts": [{"text": "Sistem: Data analisis telah diperbarui ke versi terbaru."}]})
+                existing_history.insert(0, {"role": "user", "time": now_time, "parts": [{"text": initial_context}]})
             save_chat_history(symbol, existing_history)
         else:
+            now_time = datetime.datetime.now().strftime("%H:%M")
             save_chat_history(symbol, [
-                {"role": "user", "parts": [{"text": initial_context}]},
-                {"role": "model", "parts": [{"text": "Baik, saya mengerti konteks saham ini. Silakan tanyakan apa saja."}]}
+                {"role": "user", "time": now_time, "parts": [{"text": initial_context}]},
+                {"role": "model", "time": now_time, "parts": [{"text": "Baik, saya mengerti konteks saham ini. Silakan tanyakan apa saja."}]}
             ])
         
         return final_result
@@ -299,9 +301,10 @@ def sync_chat():
 
     if symbol == "GENERAL":
         now_str = datetime.datetime.now().strftime("%A, %d %B %Y %H:%M:%S")
+        now_time = datetime.datetime.now().strftime("%H:%M")
         save_chat_history("GENERAL", [
-            {"role": "user", "parts": [{"text": f"WAKTU SEKARANG: {now_str}\nKamu adalah asisten AI serba bisa yang terintegrasi dengan mesin pencari. Kamu bisa membantu menjawab pertanyaan apa saja, melakukan riset di internet, dan memberikan analisis. Gunakan Bahasa Indonesia."}]},
-            {"role": "model", "parts": [{"text": "Halo! Saya asisten AI Anda. Ada yang bisa saya bantu hari ini? Saya bisa mencari informasi apa pun di internet untuk Anda."}]}
+            {"role": "user", "time": now_time, "parts": [{"text": f"WAKTU SEKARANG: {now_str}\nKamu adalah asisten AI serba bisa yang terintegrasi dengan mesin pencari. Kamu bisa membantu menjawab pertanyaan apa saja, melakukan riset di internet, dan memberikan analisis. Gunakan Bahasa Indonesia."}]},
+            {"role": "model", "time": now_time, "parts": [{"text": "Halo! Saya asisten AI Anda. Ada yang bisa saya bantu hari ini? Saya bisa mencari informasi apa pun di internet untuk Anda."}]}
         ])
         logging.info("General chat session has been synced/re-initialized.")
         return jsonify({"status": "ok"})
@@ -337,9 +340,10 @@ def sync_chat():
         f"Fundamental/Stats: High 52W: {enriched.get('stats', {}).get('high_52')}, Low 52W: {enriched.get('stats', {}).get('low_52')}, Cap: {enriched.get('stats', {}).get('market_cap')}.\n"
         "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal dan fundamental presisi di atas. JANGAN katakan kamu tidak punya info hari ini."
     )
+    now_time = datetime.datetime.now().strftime("%H:%M")
     save_chat_history(symbol, [
-        {"role": "user", "parts": [{"text": initial_context}]},
-        {"role": "model", "parts": [{"text": "Baik, saya mengerti konteks saham ini. Silakan tanyakan apa saja."}]}
+        {"role": "user", "time": now_time, "parts": [{"text": initial_context}]},
+        {"role": "model", "time": now_time, "parts": [{"text": "Baik, saya mengerti konteks saham ini. Silakan tanyakan apa saja."}]}
     ])
     logging.info(f"Chat session for {symbol} has been synced/re-initialized.")
     return jsonify({"status": "ok"})
@@ -533,7 +537,11 @@ def more_news():
                 "2. Berdasarkan ringkasan ini, sebutkan 2-3 data spesifik lain yang masih kamu butuhkan (misal: rasio keuangan tertentu)."
             )
             
-            summary_reply, history = chat_with_gemini(api_keys, history, prompt_1)
+            summary_reply = ""
+            for update in chat_with_gemini(api_keys, history, prompt_1):
+                if "reply" in update:
+                    summary_reply = update["reply"]
+                    history = update["history"]
             yield f"data: {json.dumps({'status': 'Menganalisis kebutuhan data tambahan...', 'summary': summary_reply})}\n\n"
             
             # 4. OTOMATIS: Riset Lanjutan
@@ -563,7 +571,11 @@ def more_news():
                     "dengan tag <JSON>...</JSON> agar saya bisa update dashboard. "
                     "JSON harus mencerminkan analisa terbaru dari isi web yang dibaca tadi."
                 )
-                final_ai_reply, history = chat_with_gemini(api_keys, history, prompt_2)
+                final_ai_reply = ""
+                for update in chat_with_gemini(api_keys, history, prompt_2):
+                    if "reply" in update:
+                        final_ai_reply = update["reply"]
+                        history = update["history"]
                 save_chat_history(symbol, history)
                 
                 json_match = re.search(r'<JSON>(.*?)</JSON>', final_ai_reply, re.DOTALL)

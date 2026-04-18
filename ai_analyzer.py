@@ -2,6 +2,7 @@ import json
 import logging
 import requests
 import time
+import datetime
 from bing_search_tool import search_bing
 from yahoo_finance_tool import get_stock_price # New import
 from utils import move_key_to_bottom
@@ -157,10 +158,26 @@ def chat_with_gemini(api_keys, history, user_message):
     if isinstance(api_keys, str): api_keys = [api_keys]
     
     # Tambahkan pesan user baru ke history asli (untuk disimpan di DB nanti)
-    full_history = history + [{"role": "user", "parts": [{"text": user_message}]}]
+    now_ui_str = datetime.datetime.now().strftime("%H:%M")
+    now_api_str = datetime.datetime.now().strftime("%d %b %Y %H:%M")
+    full_history = history + [{"role": "user", "time": now_ui_str, "api_time": now_api_str, "parts": [{"text": user_message}]}]
     
-    # Buat versi "API History" (yang diringkas jika terlalu panjang)
-    api_history = full_history[:]
+    # Buat versi "API History" dengan menyisipkan timestamp ke dalam teks agar AI paham konteks waktu
+    api_history = []
+    for msg in full_history:
+        api_parts = []
+        for p in msg.get("parts", []):
+            if "text" in p:
+                t_prefix = msg.get("api_time", msg.get("time", ""))
+                # Sisipkan waktu di awal teks jika belum ada dan jika bukan pesan konteks sistem awal
+                if t_prefix and not p["text"].startswith(f"[{t_prefix}]") and not p["text"].startswith("WAKTU SEKARANG:"):
+                    api_parts.append({"text": f"[{t_prefix}] {p['text']}"})
+                else:
+                    api_parts.append({"text": p["text"]})
+            else:
+                api_parts.append(p)
+        api_history.append({"role": msg["role"], "parts": api_parts})
+        
     if len(api_history) > 40:
         yield {"status": "Meringkas memori (setiap 20 chat) untuk menghemat token..."}
         # Sisakan index 0 (konteks) dan 20 chat terakhir agar tetap akurat
@@ -423,7 +440,8 @@ def chat_with_gemini(api_keys, history, user_message):
                     parts = result['candidates'][0]['content']['parts']
                 
                 ai_reply = "".join([p.get('text', '') for p in parts]).strip()
-                updated_history = full_history + [{"role": "model", "parts": [{"text": ai_reply}]}]
+                now_str_model = datetime.datetime.now().strftime("%H:%M")
+                updated_history = full_history + [{"role": "model", "time": now_str_model, "api_time": now_api_str, "parts": [{"text": ai_reply}]}]
                 yield {"reply": ai_reply, "history": updated_history}
                 return
                 

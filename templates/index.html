@@ -536,9 +536,10 @@
                     
                     const role = msg.role === 'user' ? 'user' : 'bot';
                     const label = msg.role === 'user' ? 'Anda' : 'AI';
+                    const timeLabel = msg.time ? msg.time : label;
                     const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                     html += `<div class="message ${role}-message">
-                                <div style="font-size: 10px; opacity: 0.6; margin-bottom: 4px;">${label}</div>
+                                <div style="font-size: 10px; opacity: 0.6; margin-bottom: 4px;">${timeLabel}</div>
                                 ${formatted}
                              </div>`;
                 }

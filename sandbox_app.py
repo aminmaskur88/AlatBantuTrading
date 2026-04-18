@@ -174,8 +174,12 @@ def sandbox_chat_api():
     api_keys = get_api_keys()
     
     try:
-        # Jika history kosong, kita anggap ini pesan pertama dan biarkan frontend yang kirim konteks
-        ai_reply, updated_history = chat_with_gemini(api_keys, history, message)
+        ai_reply = ""
+        updated_history = history
+        for update in chat_with_gemini(api_keys, history, message):
+            if "reply" in update:
+                ai_reply = update["reply"]
+                updated_history = update["history"]
         return jsonify({"reply": ai_reply, "history": updated_history})
     except Exception as e:
          return jsonify({"error": str(e)}), 500
