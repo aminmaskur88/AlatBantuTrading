@@ -1,66 +1,53 @@
 import logging
-import time
-import urllib.parse
-from selenium.webdriver.common.by import By
-from scraper import get_driver
+import aiohttp
+import asyncio
+import re
+from bs4 import BeautifulSoup
 
-def search_bing(query, search_type="web"):
+async def search_bing(query, search_type="web"):
     """
-    Melakukan pencarian di Bing menggunakan Chromium (via ScraperDriver) dan mengembalikan 5 hasil teratas.
-    search_type: "web" (default) atau "news"
+    Mencari informasi di Bing secara asinkron tanpa Selenium.
     """
-    driver = None
+    if search_type == "news":
+        url = f"https://www.bing.com/news/search?q={query}"
+    else:
+        url = f"https://www.bing.com/search?q={query}"
+        
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    }
+    
     try:
-        driver = get_driver() # Mengembalikan ScraperDriver (bisa Selenium atau shell)
-        encoded_query = urllib.parse.quote_plus(query)
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(url, timeout=10) as response:
+                html = await response.text()
+                
+        soup = BeautifulSoup(html, 'html.parser')
+        results = []
         
         if search_type == "news":
-            url = f"https://www.bing.com/news/search?q={encoded_query}&qft=interval%3D%228%22"
+            selectors = ["a.title", "h3 a"]
         else:
-            url = f"https://www.bing.com/search?q={encoded_query}"
-        
-        logging.info(f"AI menjalankan pencarian {search_type} Bing via Chromium: '{query}'")
-        driver.get(url)
-        time.sleep(3)
-        
-        # Selectors for both web and news
-        selectors = [
-            "li.b_algo h2 a",      # General Web
-            "a.title",             # News
-            "h3 a",                # Both
-            "div.news-card-body a" # News
-        ]
-        extracted = []
-        seen_links = set()
-        
-        for selector in selectors:
-            try:
-                results = driver.find_elements(By.CSS_SELECTOR, selector)
-                for res in results:
-                    title = res.text.strip()
-                    link = res.get_attribute("href")
+            selectors = ["li.b_algo h2 a", "li.b_algo h3 a"]
+            
+        for sel in selectors:
+            for item in soup.select(sel):
+                text = item.get_text().strip()
+                link = item.get('href', '')
+                if text and link.startswith("http"):
+                    results.append(f"- {text}: {link}")
                     
-                    if not link or "http" not in link: continue
-                    if "bing.com/" in link and "/search" in link: continue
+        if not results:
+            # Fallback regex if selectors fail
+            links = re.findall(r'href="(https?://[^"]+)"', html)
+            for link in links[:5]:
+                if "bing.com" not in link and "microsoft.com" not in link:
+                    results.append(f"- Link Terkait: {link}")
                     
-                    if title and len(title) > 10 and link not in seen_links:
-                        extracted.append({
-                            "title": title,
-                            "link": link
-                        })
-                        seen_links.add(link)
-                    if len(extracted) >= 5: break
-                if len(extracted) >= 5: break
-            except:
-                continue
-                
-        return extracted
+        return "\n".join(results[:10]) if results else "Tidak ada hasil ditemukan."
     except Exception as e:
-        logging.error(f"Error pada tool pencarian Bing: {e}")
-        return [{"error": str(e)}]
-    finally:
-        if driver:
-            driver.quit()
+        logging.error(f"Error async search_bing: {e}")
+        return f"Error melakukan pencarian: {str(e)}"
 
 if __name__ == "__main__":
     # Test

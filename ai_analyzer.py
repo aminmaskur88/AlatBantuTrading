@@ -1,10 +1,11 @@
 import json
 import logging
-import requests
-import time
+import aiohttp
+import asyncio
 import datetime
+import re # Add this line
 from bing_search_tool import search_bing
-from yahoo_finance_tool import get_stock_price # New import
+from yahoo_finance_tool import get_stock_price 
 from utils import move_key_to_bottom
 
 # Model fallback list for robustness
@@ -14,16 +15,14 @@ MODELS = [
     "gemini-2.5-pro"
 ]
 
-def analyze_with_gemini(api_keys, data, history=None):
+async def analyze_with_gemini(api_keys, data, history=None):
     if isinstance(api_keys, str):
         api_keys = [api_keys]
         
     headers = {"Content-Type": "application/json"}
     
-    # Tambahkan konteks obrolan sebelumnya jika ada
     chat_context = ""
     if history and len(history) > 1:
-        # Ambil 6 pesan terakhir saja agar tidak terlalu panjang
         relevant_history = history[-6:]
         chat_context = "Konteks Obrolan Sebelumnya (untuk referensi preferensi user):\n"
         for m in relevant_history:
@@ -54,21 +53,38 @@ def analyze_with_gemini(api_keys, data, history=None):
     - Support 1: {data.get('support_1')} | Support 2: {data.get('support_2')}
     - Resistance 1: {data.get('resistance_1')} | Resistance 2: {data.get('resistance_2')}
     - Bollinger Bands: Upper {data.get('bb_upper')} | Lower {data.get('bb_lower')}
-    - MACD Line: {data.get('macd')}
+    - MACD: Line {data.get('macd')} | Signal {data.get('macd_signal')} | Hist {data.get('macd_hist')}
+    - Volume: MA20 {data.get('vol_ma20')} | Status {data.get('vol_status')} | Trend {data.get('volume_trend')}
     - Fibonacci Levels: 23.6%: {data.get('fib_236')} | 38.2%: {data.get('fib_382')} | 50%: {data.get('fib_500')} | 61.8%: {data.get('fib_618')} | 78.6%: {data.get('fib_786')}
+    
+    Konteks Makroekonomi & Sektoral:
+    - Kurs USD/IDR: {data.get('macro_data', {}).get('usd_idr', 'N/A')}
+    - BI Rate: {data.get('macro_data', {}).get('bi_rate', 'N/A')}
+    - Harga Emas: {data.get('macro_data', {}).get('gold', 'N/A')}
+    - Harga Minyak (WTI): {data.get('macro_data', {}).get('oil', 'N/A')}
+    
+    Data Foreign Flow (Bandarmology - Khusus Indo):
+    {data.get('foreign_flow', 'Data tidak tersedia.')}
     
     Data Fundamental & Statistik:
     - Tertinggi 52 Minggu: {data.get('stats', {}).get('high_52')}
     - Terendah 52 Minggu: {data.get('stats', {}).get('low_52')}
     - Market Cap: {data.get('stats', {}).get('market_cap')}
+    - Ratios (Extracted): {json.dumps(data.get('ratios', {}))}
+    
+    Konteks Fundamental Tambahan (Deep Analysis):
+    {data.get('fundamental_context', 'Tidak ada data tambahan.')[:8000]}
     
     Data Historis Close (14 hari terakhir): {json.dumps(data.get('history', [])[-14:])}
     
     {chat_context}
     {holdings_str} 
     
-    Berita Terbaru:
+    Berita Terbaru (Judul):
     {json.dumps(data.get('news', []), indent=2, ensure_ascii=False)}
+
+    Deep Reading News (Isi Artikel Lengkap):
+    {data.get('deep_news_context', 'Tidak ada konten berita mendalam yang tersedia.')[:10000]}
     
     Tugas Anda:
     1. Terapkan kerangka penalaran DIKW (Data, Information, Knowledge, Wisdom) secara eksplisit dalam pemikiran analisis Anda:
@@ -76,8 +92,9 @@ def analyze_with_gemini(api_keys, data, history=None):
        - Information: Kontekstualisasikan data tersebut (tren saat ini, level kunci support/resistance).
        - Knowledge: Pahami pola dan implikasinya (pola chart, konfirmasi sinyal, hubungan teknikal & fundamental).
        - Wisdom: Hasilkan keputusan (Actionable Insight) dengan strategi entry, exit, dan manajemen risiko yang terukur.
-    2. Lakukan Analisis Teknikal & Fundamental Mendalam: Gunakan level Fibonacci dan statistik 52 minggu di atas untuk menentukan area beli/jual yang logis.
-    3. Identifikasi pola chart (misal: Double Bottom, Breakout, Sideways) dari data historis.
+    2. Lakukan Analisis Teknikal & Fundamental Mendalam.
+    3. Lakukan Analisis Sentimen "Deep Reading": Baca isi artikel lengkap di atas. bedakan mana berita yang hanya Clickbait/Rumor dan mana yang merupakan Berita Material. PERHATIKAN tanggal "DI-POSTING" pada setiap berita; berikan bobot lebih besar pada berita yang paling baru (misal: "2 jam yang lalu" lebih relevan daripada "5 hari yang lalu").
+    4. Identifikasi pola chart (misal: Double Bottom, Breakout, Sideways) dari data historis.
     4. Anda SEKARANG MEMILIKI data matematis yang cukup. JANGAN katakan Anda tidak bisa melakukan analisis teknikal atau menghitung target harga.
     5. Berikan angka presisi untuk: Harga Beli (Entry), Target Penjualan (TP), dan Cut Loss (CL).
     
@@ -107,33 +124,53 @@ def analyze_with_gemini(api_keys, data, history=None):
         }
     }
     
-    for idx, api_key in enumerate(api_keys):
-        for model_name in MODELS:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
-            try:
-                response = requests.post(url, headers=headers, json=payload, timeout=45)
-                
-                if response.status_code == 429:
-                    move_key_to_bottom(api_key)
-                    break
-                
-                if response.status_code == 503:
+    async with aiohttp.ClientSession(headers=headers) as session:
+        for idx, api_key in enumerate(api_keys):
+            for model_name in MODELS:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+                try:
+                    async with session.post(url, json=payload, timeout=45) as response:
+                        if response.status == 429:
+                            move_key_to_bottom(api_key)
+                            break
+                        
+                        if response.status == 503:
+                            continue
+                        
+                        response.raise_for_status()
+                        result = await response.json()
+                        raw_content = result['candidates'][0]['content']['parts'][0]['text']
+                        
+                        # Use regex to extract the JSON block if wrapped in markers
+                        json_match = re.search(r'```json\n(.*?)```', raw_content, re.DOTALL)
+                        if json_match:
+                            content = json_match.group(1).strip()
+                        else:
+                            # Fallback: try to clean common issues and use the whole content
+                            content = raw_content.replace("```json", "").replace("```", "").strip()
+                        
+                        # Attempt to parse the content as JSON
+                        try:
+                            return json.loads(content)
+                        except json.JSONDecodeError as e:
+                            logging.error(f"Failed to decode JSON from AI: {e}. Raw content: {raw_content[:500]}...")
+                            # If direct parse fails, try to find a JSON object within the text
+                            # This is a last resort and might not always work for complex cases
+                            json_str_match = re.search(r'\{.*\}', content, re.DOTALL)
+                            if json_str_match:
+                                try:
+                                    return json.loads(json_str_match.group(0))
+                                except json.JSONDecodeError:
+                                    pass
+                            raise
+                        
+                except Exception as e:
+                    logging.warning(f"Error calling {model_name} dengan Key {idx+1}/{len(api_keys)}: {e}")
                     continue
-                
-                response.raise_for_status()
-                result = response.json()
-                content = result['candidates'][0]['content']['parts'][0]['text']
-                content = content.replace("```json", "").replace("```", "").strip()
-                
-                return json.loads(content)
-                
-            except Exception as e:
-                logging.warning(f"Error calling {model_name} dengan Key {idx+1}/{len(api_keys)}: {e}")
-                continue
                 
     return None
 
-def summarize_history(api_keys, history_to_summarize):
+async def summarize_history(api_keys, history_to_summarize):
     if not history_to_summarize: return "Tidak ada."
     text_to_summarize = ""
     for m in history_to_summarize:
@@ -145,31 +182,31 @@ def summarize_history(api_keys, history_to_summarize):
     prompt = f"Buatkan ringkasan sangat singkat (maksimal 2 paragraf) dari inti percakapan saham berikut agar asisten tetap ingat konteksnya:\n\n{text_to_summarize}"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     headers = {"Content-Type": "application/json"}
-    for api_key in api_keys:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
-        try:
-            res = requests.post(url, headers=headers, json=payload, timeout=10)
-            if res.status_code == 200:
-                return res.json()['candidates'][0]['content']['parts'][0]['text']
-        except: continue
+    
+    async with aiohttp.ClientSession(headers=headers) as session:
+        for api_key in api_keys:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
+            try:
+                async with session.post(url, json=payload, timeout=10) as res:
+                    if res.status == 200:
+                        data = await res.json()
+                        return data['candidates'][0]['content']['parts'][0]['text']
+            except: continue
     return "Percakapan sebelumnya membahas analisis teknikal dan fundamental saham."
 
-def chat_with_gemini(api_keys, history, user_message):
+async def chat_with_gemini(api_keys, history, user_message):
     if isinstance(api_keys, str): api_keys = [api_keys]
     
-    # Tambahkan pesan user baru ke history asli (untuk disimpan di DB nanti)
     now_ui_str = datetime.datetime.now().strftime("%H:%M")
     now_api_str = datetime.datetime.now().strftime("%d %b %Y %H:%M")
     full_history = history + [{"role": "user", "time": now_ui_str, "api_time": now_api_str, "parts": [{"text": user_message}]}]
     
-    # Buat versi "API History" dengan menyisipkan timestamp ke dalam teks agar AI paham konteks waktu
     api_history = []
     for msg in full_history:
         api_parts = []
         for p in msg.get("parts", []):
             if "text" in p:
                 t_prefix = msg.get("api_time", msg.get("time", ""))
-                # Sisipkan waktu di awal teks jika belum ada dan jika bukan pesan konteks sistem awal
                 if t_prefix and not p["text"].startswith(f"[{t_prefix}]") and not p["text"].startswith("WAKTU SEKARANG:"):
                     api_parts.append({"text": f"[{t_prefix}] {p['text']}"})
                 else:
@@ -180,12 +217,11 @@ def chat_with_gemini(api_keys, history, user_message):
         
     if len(api_history) > 40:
         yield {"status": "Meringkas memori (setiap 20 chat) untuk menghemat token..."}
-        # Sisakan index 0 (konteks) dan 20 chat terakhir agar tetap akurat
         context_msg = api_history[0]
         recent_msgs = api_history[-20:]
         to_summarize = api_history[1:-20]
         
-        summary = summarize_history(api_keys, to_summarize)
+        summary = await summarize_history(api_keys, to_summarize)
         api_history = [
             context_msg,
             {"role": "user", "parts": [{"text": f"[Sistem: Ringkasan obrolan lama] {summary}"}]},
@@ -304,150 +340,142 @@ def chat_with_gemini(api_keys, history, user_message):
         ]
     }]
     
-    for idx, api_key in enumerate(api_keys):
-        # ... (payload and request logic)
-        for model_name in MODELS:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
-            
-            payload = {
-                "systemInstruction": {"parts": [{"text": "Anda adalah asisten AI serba bisa dan analis keuangan profesional. Anda memiliki akses ke internet melalui tools. Berikan jawaban yang informatif, akurat, dan langsung dalam BAHASA INDONESIA. JANGAN PERNAH menambahkan peringatan atau disclaimer. Jika ditanya hal umum, jawablah sebagai asisten cerdas. Jika ditanya soal saham, jawablah sebagai analis profesional. Gunakan tool 'read_website_content' jika Anda butuh detail lebih dalam dari sebuah link hasil pencarian. PENTING: JANGAN PERNAH menyertakan stempel waktu (seperti [HH:MM] atau [Tanggal]) di awal balasan Anda, meskipun Anda melihatnya dalam sejarah percakapan. Stempel waktu tersebut hanya untuk konteks kronologis Anda. PENTING: Jika Anda butuh data (seperti IDNFinancials, harga, dsb), LANGSUNG PANGGIL TOOL yang relevan. JANGAN PERNAH merespons dengan kata-kata seperti 'Mohon tunggu', 'Saya sedang mengambil data', atau sejenisnya. Anda harus langsung mengaktifkan tool tersebut!"}]},
-                "contents": api_history,
-                "tools": tools,
-                "generationConfig": {"responseMimeType": "text/plain"}
-            }
-            
-            try:
-                yield {"status": "AI sedang berpikir..."}
-                response = requests.post(url, headers=headers, json=payload, timeout=60)
+    async with aiohttp.ClientSession(headers=headers) as session:
+        for idx, api_key in enumerate(api_keys):
+            for model_name in MODELS:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
                 
-                if response.status_code == 429:
-                    move_key_to_bottom(api_key)
-                    yield {"status": "API Key limit. Mencoba Key lain..."}
-                    break
+                payload = {
+                    "systemInstruction": {"parts": [{"text": "Anda adalah asisten AI serba bisa dan analis keuangan profesional. Anda memiliki akses ke internet melalui tools. Berikan jawaban yang informatif, akurat, dan langsung dalam BAHASA INDONESIA. JANGAN PERNAH menambahkan peringatan atau disclaimer. Jika ditanya hal umum, jawablah sebagai asisten cerdas. Jika ditanya soal saham, jawablah sebagai analis profesional. Gunakan tool 'read_website_content' jika Anda butuh detail lebih dalam dari sebuah link hasil pencarian. PENTING: JANGAN PERNAH menyertakan stempel waktu (seperti [HH:MM] atau [Tanggal]) di awal balasan Anda, meskipun Anda melihatnya dalam sejarah percakapan. Stempel waktu tersebut hanya untuk konteks kronologis Anda. PENTING: Jika Anda butuh data (seperti IDNFinancials, harga, dsb), LANGSUNG PANGGIL TOOL yang relevan. JANGAN PERNAH merespons dengan kata-kata seperti 'Mohon tunggu', 'Saya sedang mengambil data', atau sejenisnya. Anda harus langsung mengaktifkan tool tersebut!"}]},
+                    "contents": api_history,
+                    "tools": tools,
+                    "generationConfig": {"responseMimeType": "text/plain"}
+                }
                 
-                if response.status_code == 503:
-                    yield {"status": "Model sibuk. Mencoba model lain..."}
-                    continue
-                
-                response.raise_for_status()
-                result = response.json()
-                parts = result['candidates'][0]['content']['parts']
-                
-                function_call = None
-                for p in parts:
-                    if 'functionCall' in p:
-                        function_call = p['functionCall']
-                        break
-                
-                if function_call:
-                    function_name = function_call.get('name', '')
-                    args = function_call.get('args', {})
-                    
-                    tool_result = ""
-                    if function_name == 'search_bing':
-                        query = args.get('query', '')
-                        stype = args.get('search_type', 'web')
-                        yield {"status": f"AI menggunakan Bing Search ({stype}): '{query}'"}
-                        logging.info(f"AI (Chat - {model_name}) mencari Bing ({stype}): {query}")
-                        tool_result = search_bing(query, search_type=stype)
-                    elif function_name == 'read_website_content':
-                        target_url = args.get('url', '')
-                        yield {"status": f"AI sedang membaca konten: {target_url[:50]}..."}
-                        logging.info(f"AI (Chat - {model_name}) membaca URL: {target_url}")
-                        from news_scraper import scrape_article_content
-                        tool_result = scrape_article_content(target_url)
-                    elif function_name == 'get_stock_price':
-                        symbol = args.get('symbol', '')
-                        yield {"status": f"AI mencari harga di Yahoo Finance: '{symbol}'"}
-                        logging.info(f"AI mencari harga di Yahoo Finance untuk: {symbol}")
-                        yf_result = get_stock_price(symbol)
+                try:
+                    yield {"status": "AI sedang berpikir..."}
+                    async with session.post(url, json=payload, timeout=60) as response:
+                        if response.status == 429:
+                            move_key_to_bottom(api_key)
+                            yield {"status": "API Key limit. Mencoba Key lain..."}
+                            break
                         
-                        if "error" in yf_result:
-                            yield {"status": "Yahoo Finance gagal. Mencoba fallback ke Bing..."}
-                            tool_result = search_bing(f"harga saham {symbol} terkini")
-                        else:
-                            tool_result = f"Harga {yf_result['symbol']} saat ini: {yf_result['price']} {yf_result['unit']} ({yf_result['change_percent']})"
-                    
-                    elif function_name == 'get_historical_stock_data':
-                        symbol = args.get('symbol', '')
-                        range_val = args.get('range', '3mo')
-                        yield {"status": f"AI menarik data historis {range_val} untuk {symbol}..."}
-                        from yahoo_finance_tool import get_historical_stock_data
-                        res = get_historical_stock_data(symbol, range_val)
-                        tool_result = json.dumps(res) if "error" not in res else res["error"]
+                        if response.status == 503:
+                            yield {"status": "Model sibuk. Mencoba model lain..."}
+                            continue
                         
-                    elif function_name == 'get_fundamental_data':
-                        symbol = args.get('symbol', '')
-                        yield {"status": f"AI menganalisis data fundamental {symbol}..."}
-                        from yahoo_finance_tool import get_fundamental_data
-                        res = get_fundamental_data(symbol)
-                        tool_result = json.dumps(res) if "error" not in res else res["error"]
+                        response.raise_for_status()
+                        result = await response.json()
+                        parts = result['candidates'][0]['content']['parts']
                         
-                    elif function_name == 'get_technical_analysis':
-                        symbol = args.get('symbol', '')
-                        yield {"status": f"AI menghitung indikator teknikal mendalam untuk {symbol}..."}
-                        from yahoo_finance_tool import get_historical_stock_data
-                        from formatter import calculate_rsi, calculate_ma, calculate_technical_indicators
-                        hist_data = get_historical_stock_data(symbol, "90d")
-                        if "error" in hist_data:
-                            tool_result = f"Gagal menghitung teknikal: {hist_data['error']}"
-                        else:
-                            prices = [d['close'] for d in hist_data['history']]
-                            rsi = calculate_rsi(prices)
-                            ma20 = calculate_ma(prices, 20)
-                            deep = calculate_technical_indicators(prices)
-                            tool_result = json.dumps({
-                                "symbol": symbol, "rsi": rsi, "ma20": ma20, "indicators": deep
+                        function_call = None
+                        for p in parts:
+                            if 'functionCall' in p:
+                                function_call = p['functionCall']
+                                break
+                        
+                        if function_call:
+                            function_name = function_call.get('name', '')
+                            args = function_call.get('args', {})
+                            
+                            tool_result = ""
+                            if function_name == 'search_bing':
+                                query = args.get('query', '')
+                                stype = args.get('search_type', 'web')
+                                yield {"status": f"AI menggunakan Bing Search ({stype}): '{query}'"}
+                                tool_result = await search_bing(query, search_type=stype)
+                            elif function_name == 'read_website_content':
+                                target_url = args.get('url', '')
+                                yield {"status": f"AI sedang membaca konten: {target_url[:50]}..."}
+                                from news_scraper import scrape_article_content
+                                tool_result = await scrape_article_content(target_url)
+                            elif function_name == 'get_stock_price':
+                                symbol = args.get('symbol', '')
+                                yield {"status": f"AI mencari harga di Yahoo Finance: '{symbol}'"}
+                                yf_result = await get_stock_price(symbol)
+                                
+                                if "error" in yf_result:
+                                    yield {"status": "Yahoo Finance gagal. Mencoba fallback ke Bing..."}
+                                    tool_result = await search_bing(f"harga saham {symbol} terkini")
+                                else:
+                                    tool_result = f"Harga {yf_result['symbol']} saat ini: {yf_result['price']} {yf_result['unit']} ({yf_result['change_percent']})"
+                            
+                            elif function_name == 'get_historical_stock_data':
+                                symbol = args.get('symbol', '')
+                                range_val = args.get('range', '3mo')
+                                yield {"status": f"AI menarik data historis {range_val} untuk {symbol}..."}
+                                from yahoo_finance_tool import get_historical_stock_data
+                                res = await get_historical_stock_data(symbol, range_val)
+                                tool_result = json.dumps(res) if "error" not in res else res["error"]
+                                
+                            elif function_name == 'get_fundamental_data':
+                                symbol = args.get('symbol', '')
+                                yield {"status": f"AI menganalisis data fundamental {symbol}..."}
+                                from yahoo_finance_tool import get_fundamental_data
+                                res = await get_fundamental_data(symbol)
+                                tool_result = json.dumps(res) if "error" not in res else res["error"]
+                                
+                            elif function_name == 'get_technical_analysis':
+                                symbol = args.get('symbol', '')
+                                yield {"status": f"AI menghitung indikator teknikal mendalam untuk {symbol}..."}
+                                from yahoo_finance_tool import get_historical_stock_data
+                                from formatter import calculate_rsi, calculate_ma, calculate_technical_indicators
+                                hist_data = await get_historical_stock_data(symbol, "90d")
+                                if "error" in hist_data:
+                                    tool_result = f"Gagal menghitung teknikal: {hist_data['error']}"
+                                else:
+                                    prices = [d['close'] for d in hist_data['history']]
+                                    volumes = [d.get('volume', 0) for d in hist_data['history']]
+                                    rsi = calculate_rsi(prices)
+                                    ma20 = calculate_ma(prices, 20)
+                                    deep = calculate_technical_indicators(prices, volumes=volumes)
+                                    tool_result = json.dumps({
+                                        "symbol": symbol, "rsi": rsi, "ma20": ma20, "indicators": deep
+                                    })
+                                    
+                            elif function_name == 'get_market_sentiment':
+                                symbol = args.get('symbol', '')
+                                yield {"status": f"AI sedang meriset sentimen pasar untuk {symbol}..."}
+                                from news_scraper import scrape_news
+                                news = await scrape_news(symbol)
+                                tool_result = json.dumps(news) if news else "Tidak ada berita ditemukan."
+                                
+                            elif function_name == 'get_idnfinancials_data':
+                                symbol = args.get('symbol', '')
+                                yield {"status": f"AI sedang membaca data IDNFinancials untuk {symbol} melalui Selenium..."}
+                                from scraper import scrape_idnfinancials
+                                clean_symbol = symbol.replace('.JK', '').replace('.jk', '')
+                                tool_result = scrape_idnfinancials(clean_symbol)
+                            
+                            api_history.append({"role": "model", "parts": [{"functionCall": function_call}]})
+                            api_history.append({
+                                "role": "function",
+                                "parts": [
+                                    {
+                                        "functionResponse": {
+                                            "name": function_name,
+                                            "response": {"result": tool_result}
+                                        }
+                                    }
+                                ]
                             })
                             
-                    elif function_name == 'get_market_sentiment':
-                        symbol = args.get('symbol', '')
-                        yield {"status": f"AI sedang meriset sentimen pasar untuk {symbol}..."}
-                        from news_scraper import scrape_news
-                        from scraper import get_driver
-                        driver = get_driver()
-                        news = scrape_news(symbol, driver)
-                        driver.quit()
-                        tool_result = json.dumps(news) if news else "Tidak ada berita ditemukan."
+                            payload["contents"] = api_history
+                            yield {"status": "AI memproses hasil pencarian..."}
+                            async with session.post(url, json=payload, timeout=60) as res_final:
+                                res_final.raise_for_status()
+                                result = await res_final.json()
+                                parts = result['candidates'][0]['content']['parts']
                         
-                    elif function_name == 'get_idnfinancials_data':
-                        symbol = args.get('symbol', '')
-                        yield {"status": f"AI sedang membaca data IDNFinancials untuk {symbol} melalui Selenium..."}
-                        from scraper import scrape_idnfinancials
+                        ai_reply = "".join([p.get('text', '') for p in parts]).strip()
+                        now_str_model = datetime.datetime.now().strftime("%H:%M")
+                        updated_history = full_history + [{"role": "model", "time": now_str_model, "api_time": now_api_str, "parts": [{"text": ai_reply}]}]
+                        yield {"reply": ai_reply, "history": updated_history}
+                        return
                         
-                        # Remove .JK if exists since IDNFinancials expects bare symbol (e.g., BBCA)
-                        clean_symbol = symbol.replace('.JK', '').replace('.jk', '')
-                        tool_result = scrape_idnfinancials(clean_symbol)
+                except Exception as e:
+                    logging.warning(f"Error chat dengan {model_name} Key {idx+1}: {e}")
+                    yield {"status": f"Terjadi kendala teknis. Mencoba ulang..."}
+                    continue
                     
-                    api_history.append({"role": "model", "parts": [{"functionCall": function_call}]})
-                    api_history.append({
-                        "role": "function",
-                        "parts": [
-                            {
-                                "functionResponse": {
-                                    "name": function_name,
-                                    "response": {"result": tool_result}
-                                }
-                            }
-                        ]
-                    })
-                    
-                    payload["contents"] = api_history
-                    yield {"status": "AI memproses hasil pencarian..."}
-                    response = requests.post(url, headers=headers, json=payload, timeout=60)
-                    response.raise_for_status()
-                    result = response.json()
-                    parts = result['candidates'][0]['content']['parts']
-                
-                ai_reply = "".join([p.get('text', '') for p in parts]).strip()
-                now_str_model = datetime.datetime.now().strftime("%H:%M")
-                updated_history = full_history + [{"role": "model", "time": now_str_model, "api_time": now_api_str, "parts": [{"text": ai_reply}]}]
-                yield {"reply": ai_reply, "history": updated_history}
-                return
-                
-            except Exception as e:
-                logging.warning(f"Error chat dengan {model_name} Key {idx+1}: {e}")
-                yield {"status": f"Terjadi kendala teknis. Mencoba ulang..."}
-                continue
-                
     yield {"reply": "Maaf, terjadi kesalahan pada semua model dan API Key.", "history": full_history}

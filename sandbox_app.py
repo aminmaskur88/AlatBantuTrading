@@ -18,17 +18,20 @@ last_run_time = None
 
 def auto_pilot_loop():
     global auto_pilot_enabled, auto_pilot_watchlist, last_run_time
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     while True:
         if auto_pilot_enabled:
             print(f"--- Auto-Pilot: Scanning Market for {', '.join(auto_pilot_watchlist)} ---")
             try:
-                run_bot_iteration(watchlist=auto_pilot_watchlist)
+                loop.run_until_complete(run_bot_iteration(watchlist=auto_pilot_watchlist))
                 last_run_time = datetime.datetime.now().isoformat()
             except Exception as e:
                 print(f"Auto-Pilot Error: {e}")
-        time.sleep(60) # Run every 60 seconds for stability
+        time.sleep(60) 
 
 import datetime
+import asyncio
 # Start background thread
 threading.Thread(target=auto_pilot_loop, daemon=True).start()
 
@@ -37,9 +40,9 @@ def index():
     return render_template("sandbox.html")
 
 @app.route("/api/portfolio")
-def portfolio_api():
+async def portfolio_api():
     try:
-        balance, initial_capital, holdings = get_portfolio()
+        balance, initial_capital, holdings = await get_portfolio()
         return jsonify({
             "balance": balance,
             "initial_capital": initial_capital,
@@ -49,7 +52,7 @@ def portfolio_api():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/trades_history")
-def trades_history_api():
+async def trades_history_api():
     try:
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
@@ -72,7 +75,7 @@ def trades_history_api():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/orders")
-def orders_api():
+async def orders_api():
     try:
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
@@ -84,7 +87,7 @@ def orders_api():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/logs")
-def logs_api():
+async def logs_api():
     try:
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
@@ -97,22 +100,21 @@ def logs_api():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/run_bot", methods=["POST"])
-def run_bot_api():
+async def run_bot_api():
     try:
         data = request.json or {}
         watchlist = data.get("watchlist", [])
-        result = run_bot_iteration(watchlist=watchlist)
+        result = await run_bot_iteration(watchlist=watchlist)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/auto_pilot", methods=["POST"])
-def toggle_auto_pilot():
+async def toggle_auto_pilot():
     global auto_pilot_enabled, auto_pilot_watchlist
     data = request.json or {}
     auto_pilot_enabled = data.get("enabled", False)
     
-    # Update watchlist if provided
     if "watchlist" in data and isinstance(data["watchlist"], list):
         auto_pilot_watchlist = [s.strip().upper() for s in data["watchlist"] if s.strip()]
     
@@ -125,7 +127,7 @@ def toggle_auto_pilot():
     })
 
 @app.route("/api/auto_pilot_status")
-def get_auto_pilot_status():
+async def get_auto_pilot_status():
     global auto_pilot_enabled, auto_pilot_watchlist, last_run_time
     return jsonify({
         "enabled": auto_pilot_enabled, 
@@ -134,7 +136,7 @@ def get_auto_pilot_status():
     })
 
 @app.route("/api/reset_sandbox", methods=["POST"])
-def reset_sandbox_api():
+async def reset_sandbox_api():
     try:
         from sandbox_logic import reset_sandbox_data
         reset_sandbox_data()
@@ -143,7 +145,7 @@ def reset_sandbox_api():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/asset_analysis/<symbol>")
-def asset_analysis_api(symbol):
+async def asset_analysis_api(symbol):
     try:
         import os
         import json
@@ -160,7 +162,7 @@ def asset_analysis_api(symbol):
 sandbox_chat_sessions = {}
 
 @app.route("/api/sandbox_chat", methods=["POST"])
-def sandbox_chat_api():
+async def sandbox_chat_api():
     data = request.json
     symbol = data.get("symbol", "").strip().upper()
     message = data.get("message", "").strip()
@@ -176,7 +178,7 @@ def sandbox_chat_api():
     try:
         ai_reply = ""
         updated_history = history
-        for update in chat_with_gemini(api_keys, history, message):
+        async for update in chat_with_gemini(api_keys, history, message):
             if "reply" in update:
                 ai_reply = update["reply"]
                 updated_history = update["history"]

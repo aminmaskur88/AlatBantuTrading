@@ -54,7 +54,7 @@ def save_log(message):
         conn.close()
     except: pass
 
-def get_portfolio():
+async def get_portfolio():
     try:
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
@@ -68,7 +68,8 @@ def get_portfolio():
         for r in holdings_raw:
             symbol, qty, avg = r
             try:
-                current_price, _, _ = get_coingecko_data(symbol)
+                # get_coingecko_data is now async
+                current_price, _, _ = await get_coingecko_data(symbol)
                 if current_price is None: current_price = avg
             except: current_price = avg
             holdings.append({"symbol": symbol, "quantity": qty, "avg_price": avg, "current_price": current_price, "value": qty * current_price})
@@ -112,7 +113,7 @@ def execute_trade(symbol, trade_type, price, quantity, reason):
     conn.close()
     return True
 
-def run_bot_iteration(watchlist=None):
+async def run_bot_iteration(watchlist=None):
     init_db()
     api_keys = get_api_keys()
     if not api_keys: return {"error": "API Key missing"}
@@ -120,97 +121,98 @@ def run_bot_iteration(watchlist=None):
     if not watchlist or not any(watchlist):
         watchlist = ["BTC-USD", "ETH-USD", "SOL-USD"]
         
-    balance, _, holdings_list = get_portfolio()
+    balance, _, holdings_list = await get_portfolio()
     holdings_dict = {h['symbol']: h for h in holdings_list}
     pending_orders = get_pending_orders()
     logs = []
     def add_log(msg):
         logs.append(msg); save_log(msg)
-    driver = None
-    try:
-        driver = get_driver()
-        headers = {"Content-Type": "application/json"}
-        for symbol in watchlist:
-            try:
-                raw_data = scrape_stock_data(symbol, driver)
-                current_price = float(raw_data.get('price', '0'))
-                if current_price <= 0: continue
-                # 1. Check Executions
-                conn = sqlite3.connect(DB_PATH)
-                cur = conn.cursor()
-                for order in [o for o in pending_orders if o['symbol'] == symbol]:
-                    triggered = False
-                    if order['side'] == 'BUY' and current_price <= order['target_price']:
-                        triggered = True; action_msg = f"✅ SCALP BUY! {symbol} at ${current_price:,.2f}"
-                    elif order['side'] == 'SELL':
-                        if order['tp_price'] and current_price >= order['tp_price']:
-                            triggered = True; action_msg = f"💰 SCALP PROFIT! {symbol} sold at ${current_price:,.2f}"
-                        elif order['sl_price'] and current_price <= order['sl_price']:
-                            triggered = True; action_msg = f"📉 SCALP STOP LOSS. {symbol} sold at ${current_price:,.2f}"
-                    if triggered:
-                        if execute_trade(symbol, order['side'], current_price, order['quantity'], action_msg):
-                            cur.execute("UPDATE orders SET status = 'FILLED' WHERE id = ?", (order['id'],)); add_log(action_msg)
-                conn.commit(); conn.close()
-                # 2. New Analysis
-                if not any(o['symbol'] == symbol for o in get_pending_orders()):
-                    enriched = enrich_data(clean_data(raw_data))
-                    holding = holdings_dict.get(symbol, {})
-                    qty_owned = holding.get('quantity', 0)
-                    avg_price = holding.get('avg_price', 0)
-                    
-                    status_context = f"Owned: {qty_owned} units at avg price ${avg_price:,.2f}." if qty_owned > 0 else "No current position."
-                    
-                    prompt = (
-                        f"ROLE: Professional Crypto Scalper. Balance: ${balance:,.2f}. Asset: {symbol}. {status_context} "
-                        f"DATA: {json.dumps(enriched)}. "
-                        "TASK: Analyze data and provide a trade plan. "
-                        "If no position: Consider 'BUY' or 'NONE'. "
-                        "If position exists: Consider 'SELL' (to take profit/cut loss) or 'NONE'. "
-                        "Strategy: Scalping (Target 0.5-2.0% profit, 1.0% stop loss). "
-                        "JSON OUTPUT ONLY: "
-                        '{"side": "BUY/SELL/NONE", "target_price": float, "tp_price": float, "sl_price": float, "units": float, "analysis": "brief market overview", "reason": "logic for trade"}'
-                    )
-                    
-                    payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"responseMimeType": "application/json"}}
-                    res_text = None
+    
+    headers = {"Content-Type": "application/json"}
+    for symbol in watchlist:
+        try:
+            # scrape_stock_data is now async
+            raw_data = await scrape_stock_data(symbol)
+            current_price = float(raw_data.get('price', '0'))
+            if current_price <= 0: continue
+            
+            # 1. Check Executions
+            conn = sqlite3.connect(DB_PATH)
+            cur = conn.cursor()
+            for order in [o for o in pending_orders if o['symbol'] == symbol]:
+                triggered = False
+                if order['side'] == 'BUY' and current_price <= order['target_price']:
+                    triggered = True; action_msg = f"✅ SCALP BUY! {symbol} at ${current_price:,.2f}"
+                elif order['side'] == 'SELL':
+                    if order['tp_price'] and current_price >= order['tp_price']:
+                        triggered = True; action_msg = f"💰 SCALP PROFIT! {symbol} sold at ${current_price:,.2f}"
+                    elif order['sl_price'] and current_price <= order['sl_price']:
+                        triggered = True; action_msg = f"📉 SCALP STOP LOSS. {symbol} sold at ${current_price:,.2f}"
+                if triggered:
+                    if execute_trade(symbol, order['side'], current_price, order['quantity'], action_msg):
+                        cur.execute("UPDATE orders SET status = 'FILLED' WHERE id = ?", (order['id'],)); add_log(action_msg)
+            conn.commit(); conn.close()
+            
+            # 2. New Analysis
+            if not any(o['symbol'] == symbol for o in get_pending_orders()):
+                enriched = enrich_data(clean_data(raw_data))
+                holding = holdings_dict.get(symbol, {})
+                qty_owned = holding.get('quantity', 0)
+                avg_price = holding.get('avg_price', 0)
+                
+                status_context = f"Owned: {qty_owned} units at avg price ${avg_price:,.2f}." if qty_owned > 0 else "No current position."
+                
+                prompt = (
+                    f"ROLE: Professional Crypto Scalper. Balance: ${balance:,.2f}. Asset: {symbol}. {status_context} "
+                    f"DATA: {json.dumps(enriched)}. "
+                    "TASK: Analyze data and provide a trade plan. "
+                    "If no position: Consider 'BUY' or 'NONE'. "
+                    "If position exists: Consider 'SELL' (to take profit/cut loss) or 'NONE'. "
+                    "Strategy: Scalping (Target 0.5-2.0% profit, 1.0% stop loss). "
+                    "JSON OUTPUT ONLY: "
+                    '{"side": "BUY/SELL/NONE", "target_price": float, "tp_price": float, "sl_price": float, "units": float, "analysis": "brief market overview", "reason": "logic for trade"}'
+                )
+                
+                payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"responseMimeType": "application/json"}}
+                res_text = None
+                
+                async with aiohttp.ClientSession(headers=headers) as session:
                     for api_key in api_keys:
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
                         try:
-                            response = requests.post(url, headers=headers, json=payload, timeout=20)
-                            res_text = response.json()['candidates'][0]['content']['parts'][0]['text']; break
+                            async with session.post(url, json=payload, timeout=20) as response:
+                                data = await response.json()
+                                res_text = data['candidates'][0]['content']['parts'][0]['text']; break
                         except: continue
-                    if res_text:
-                        plan = json.loads(res_text); side = plan.get("side", "NONE").upper()
-                        
-                        # Save for modal compatibility
-                        formatted_ai = {
-                            "timestamp": datetime.datetime.now().isoformat(),
-                            "data": enriched,
-                            "ai_result": {
-                                "signal": side,
-                                "entry_price": plan.get("target_price", 0),
-                                "target_price": plan.get("tp_price", 0),
-                                "cut_loss_price": plan.get("sl_price", 0),
-                                "analysis": plan.get("analysis", ""),
-                                "reason": plan.get("reason", "")
-                            }
+                
+                if res_text:
+                    plan = json.loads(res_text); side = plan.get("side", "NONE").upper()
+                    
+                    formatted_ai = {
+                        "timestamp": datetime.datetime.now().isoformat(),
+                        "data": enriched,
+                        "ai_result": {
+                            "signal": side,
+                            "entry_price": plan.get("target_price", 0),
+                            "target_price": plan.get("tp_price", 0),
+                            "cut_loss_price": plan.get("sl_price", 0),
+                            "analysis": plan.get("analysis", ""),
+                            "reason": plan.get("reason", "")
                         }
-                        save_json(f"data/result/{symbol.upper()}.json", formatted_ai)
+                    }
+                    save_json(f"data/result/{symbol.upper()}.json", formatted_ai)
 
-                        if side == "SELL" and qty_owned <= 0: side = "NONE"
-                        if side != "NONE":
-                            # Basic unit safety check for buying
-                            units = plan.get('units', 0)
-                            if side == "BUY":
-                                max_units = (balance * 0.95) / current_price # Use max 95% of balance
-                                units = min(units, max_units)
-                                
-                            if units > 0:
-                                conn = sqlite3.connect(DB_PATH); cur = conn.cursor()
-                                cur.execute("INSERT INTO orders (symbol, target_price, tp_price, sl_price, quantity, side, reason) VALUES (?, ?, ?, ?, ?, ?, ?)", (symbol, plan['target_price'], plan['tp_price'], plan['sl_price'], units, side, plan['reason']))
-                                conn.commit(); conn.close(); add_log(f"📝 {symbol} Plan: {side} {units:,.4f} at ${plan['target_price']:,.2f}")
-                time.sleep(0.5)
-            except: continue
-        return {"status": "success", "logs": logs}
-    finally:
-        if driver: driver.quit()
+                    if side == "SELL" and qty_owned <= 0: side = "NONE"
+                    if side != "NONE":
+                        units = plan.get('units', 0)
+                        if side == "BUY":
+                            max_units = (balance * 0.95) / current_price 
+                            units = min(units, max_units)
+                            
+                        if units > 0:
+                            conn = sqlite3.connect(DB_PATH); cur = conn.cursor()
+                            cur.execute("INSERT INTO orders (symbol, target_price, tp_price, sl_price, quantity, side, reason) VALUES (?, ?, ?, ?, ?, ?, ?)", (symbol, plan['target_price'], plan['tp_price'], plan['sl_price'], units, side, plan['reason']))
+                            conn.commit(); conn.close(); add_log(f"📝 {symbol} Plan: {side} {units:,.4f} at ${plan['target_price']:,.2f}")
+            await asyncio.sleep(0.5)
+        except: continue
+    return {"status": "success", "logs": logs}

@@ -223,9 +223,11 @@
                     <span class="material-icons-round" style="font-size: 16px;">delete_sweep</span>
                 </button>
             </h3>
-            <ul id="recentAnalysesList" style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
-                <li style="font-size: 12px; color: var(--text-muted);">Belum ada riwayat.</li>
-            </ul>
+            <div style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                <ul id="recentAnalysesList" style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
+                    <li style="font-size: 12px; color: var(--text-muted);">Belum ada riwayat.</li>
+                </ul>
+            </div>
         </div>
 
         <div id="sidebarResults" style="display: none; flex: 1; display: flex; flex-direction: column;">
@@ -246,6 +248,22 @@
                     <div class="data-row"><span class="data-label">Perubahan:</span><span class="data-value" id="resChange"></span></div>
                     <div class="data-row"><span class="data-label">Tren:</span><span class="data-value" id="resTrend" style="text-transform: capitalize;"></span></div>
                     <div class="data-row"><span class="data-label">Sentimen:</span><span class="data-value" id="resSentiment" style="text-transform: capitalize;"></span></div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="section-title"><span class="material-icons-round">public</span> Kondisi Makro</h3>
+                <div class="options-box">
+                    <div class="data-row"><span class="data-label">USD/IDR:</span><span class="data-value" id="resUsdIdr"></span></div>
+                    <div class="data-row"><span class="data-label">BI Rate:</span><span class="data-value" id="resBiRate"></span></div>
+                    <div class="data-row"><span class="data-label">Emas:</span><span class="data-value" id="resGold"></span></div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="section-title"><span class="material-icons-round">groups</span> Bandarmology</h3>
+                <div class="options-box">
+                    <div id="resForeignFlow" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">Memuat data arus kas...</div>
                 </div>
             </div>
 
@@ -321,6 +339,14 @@
                         <div class="data-row"><span class="data-label">BB Upper:</span><span class="data-value" id="resBBU"></span></div>
                         <div class="data-row"><span class="data-label">BB Lower:</span><span class="data-value" id="resBBL"></span></div>
                         <div class="data-row"><span class="data-label">MACD Line:</span><span class="data-value" id="resMACD"></span></div>
+                        <div class="data-row"><span class="data-label">MACD Signal:</span><span class="data-value" id="resMACDSig"></span></div>
+                        <div class="data-row"><span class="data-label">MACD Hist:</span><span class="data-value" id="resMACDHist"></span></div>
+                    </div>
+                    <div class="options-box">
+                        <div class="section-title" style="margin-bottom: 10px;">Volume Analysis</div>
+                        <div class="data-row"><span class="data-label">Vol MA20:</span><span class="data-value" id="resVolMA"></span></div>
+                        <div class="data-row"><span class="data-label">Vol Status:</span><span class="data-value" id="resVolStatus"></span></div>
+                        <div class="data-row"><span class="data-label">OBV Trend:</span><span class="data-value" id="resVolTrend"></span></div>
                     </div>
                     <div class="options-box">
                         <div class="section-title" style="margin-bottom: 10px;">Fibonacci (90D)</div>
@@ -358,6 +384,20 @@
                         </button>
                     </div>
                     <ul class="news-list" id="resNewsList"></ul>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-header" style="justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round">bookmark</span> Arsip Berita
+                        </div>
+                    </div>
+                    <form id="formAddArchive" style="display: flex; gap: 8px; margin-bottom: 12px;">
+                        <input type="url" id="archiveUrl" class="input-box" placeholder="URL Berita" required style="flex: 1;">
+                        <input type="text" id="archiveTitle" class="input-box" placeholder="Judul (opsional)" style="flex: 1;">
+                        <button type="submit" class="btn-primary" style="width: auto; padding: 4px 16px;">Simpan</button>
+                    </form>
+                    <ul class="news-list" id="resArchiveList"></ul>
                 </div>
             </div>
         </div>
@@ -574,6 +614,16 @@
             document.getElementById('resTrend').textContent = resData.market_trend || '-';
             document.getElementById('resSentiment').textContent = resData.sentiment || '-';
 
+            // Populate Macro Data
+            const macro = data.macro_data || resData.macro_data || {};
+            document.getElementById('resUsdIdr').textContent = macro.usd_idr || '-';
+            document.getElementById('resBiRate').textContent = macro.bi_rate || '-';
+            document.getElementById('resGold').textContent = macro.gold || '-';
+
+            // Populate Foreign Flow
+            const foreign = data.foreign_flow || resData.foreign_flow || 'Data tidak tersedia.';
+            document.getElementById('resForeignFlow').textContent = foreign.length > 300 ? foreign.substring(0, 300) + '...' : foreign;
+
             // Populate Deep Technical Indicators
             const formatNum = (val) => (val === null || val === undefined || isNaN(parseFloat(val))) ? '-' : parseFloat(val).toLocaleString('id-ID');
             document.getElementById('resS1').textContent = formatNum(resData.support_1);
@@ -581,6 +631,13 @@
             document.getElementById('resBBU').textContent = formatNum(resData.bb_upper);
             document.getElementById('resBBL').textContent = formatNum(resData.bb_lower);
             document.getElementById('resMACD').textContent = formatNum(resData.macd);
+            document.getElementById('resMACDSig').textContent = formatNum(resData.macd_signal);
+            document.getElementById('resMACDHist').textContent = formatNum(resData.macd_hist);
+            
+            document.getElementById('resVolMA').textContent = formatNum(resData.vol_ma20);
+            document.getElementById('resVolStatus').textContent = resData.vol_status || '-';
+            document.getElementById('resVolTrend').textContent = resData.volume_trend || '-';
+            
             document.getElementById('resFib618').textContent = formatNum(resData.fib_618);
             document.getElementById('resFib500').textContent = formatNum(resData.fib_500);
             document.getElementById('resFib382').textContent = formatNum(resData.fib_382);
@@ -631,6 +688,7 @@
             }
             
             loadTradingViewWidget(currentSymbol);
+            loadArchives(currentSymbol);
 
             document.getElementById('welcomeScreen').style.display = 'none';
             document.getElementById('sidebarResults').style.display = 'flex';
@@ -661,7 +719,8 @@
                 items.forEach(item => {
                     const li = document.createElement('li');
                     li.style = 'display: flex; justify-content: space-between; align-items: center; font-size: 13px; background: var(--bg-app); padding: 8px 12px; border-radius: 6px;';
-                    li.innerHTML = `<span style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;">${item.name || item.symbol}</span>
+                    const displayName = item.symbol;
+                    li.innerHTML = `<span style="font-weight: 700; color: var(--accent);">${displayName}</span>
                                     <div style="display: flex; gap: 4px;">
                                         <button class="btn-primary load-history-btn" data-symbol="${item.symbol}" style="width: auto; padding: 4px 10px; font-size: 11px; flex-shrink: 0;">Muat</button>
                                         <button class="btn-icon delete-history-btn" data-symbol="${item.symbol}" style="color: var(--sell); padding: 4px; border: 1px solid var(--border-color);" title="Hapus"><span class="material-icons-round" style="font-size: 16px; pointer-events: none;">delete</span></button>
@@ -915,6 +974,81 @@
         document.getElementById('chatForm').addEventListener('submit', (e) => { e.preventDefault(); handleChat(document.getElementById('chatInput').value.trim(), false); });
         largeChatForm.addEventListener('submit', (e) => { e.preventDefault(); handleChat(largeChatInput.value.trim(), true); });
         
+        async function loadArchives(symbol) {
+            const list = document.getElementById('resArchiveList');
+            if (!symbol) { list.innerHTML = ''; return; }
+            list.innerHTML = '<li class="news-item" style="color: var(--text-muted); padding:12px;">Memuat arsip...</li>';
+            try {
+                const response = await fetch(`/api/news_archive/${symbol}`);
+                const data = await response.json();
+                list.innerHTML = '';
+                if (data.archives && data.archives.length > 0) {
+                    data.archives.forEach(a => {
+                        const li = document.createElement('li');
+                        li.className = 'news-item';
+                        li.style.display = 'flex';
+                        li.style.justifyContent = 'space-between';
+                        li.style.alignItems = 'center';
+                        
+                        const aTag = document.createElement('a');
+                        aTag.href = a.url;
+                        aTag.target = '_blank';
+                        aTag.textContent = a.title || a.url;
+                        aTag.style.flex = '1';
+                        
+                        const delBtn = document.createElement('button');
+                        delBtn.innerHTML = '<span class="material-icons-round" style="font-size: 16px;">delete</span>';
+                        delBtn.className = 'btn-icon';
+                        delBtn.style.color = 'var(--sell)';
+                        delBtn.onclick = async (e) => {
+                            e.preventDefault();
+                            if(await appConfirm('Hapus arsip ini?')) {
+                                await fetch(`/api/news_archive/${a.id}`, { method: 'DELETE' });
+                                loadArchives(symbol);
+                            }
+                        };
+                        
+                        li.appendChild(aTag);
+                        li.appendChild(delBtn);
+                        list.appendChild(li);
+                    });
+                } else {
+                    list.innerHTML = '<li class="news-item" style="color: var(--text-muted); padding:12px;">Belum ada arsip.</li>';
+                }
+            } catch (e) {
+                list.innerHTML = `<li class="news-item" style="color: var(--sell); padding:12px;">Error memuat arsip.</li>`;
+            }
+        }
+
+        document.getElementById('formAddArchive').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentSymbol) return;
+            const urlInput = document.getElementById('archiveUrl');
+            const titleInput = document.getElementById('archiveTitle');
+            const btn = e.target.querySelector('button');
+            const url = urlInput.value.trim();
+            const title = titleInput.value.trim();
+            
+            btn.disabled = true;
+            try {
+                const response = await fetch('/api/news_archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol: currentSymbol, url, title })
+                });
+                if (response.ok) {
+                    urlInput.value = '';
+                    titleInput.value = '';
+                    loadArchives(currentSymbol);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Gagal menyimpan arsip");
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
         updateRecentAnalysesList();
     </script>
 </body>
