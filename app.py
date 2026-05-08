@@ -13,6 +13,49 @@ from formatter import clean_data, enrich_data
 from ai_analyzer import analyze_with_gemini, chat_with_gemini
 
 app = Flask(__name__)
+
+# --- WATCHLIST REALTIME ENDPOINT ---
+import yfinance as yf
+@app.route('/api/watchlist')
+def get_watchlist_realtime():
+    try:
+        with open('watchlist.json', 'r') as f:
+            tickers = json.load(f)
+    except:
+        tickers = ['BBCA', 'BBRI', 'TLKM', 'ASII', 'GOTO']
+    
+    # Tambahkan logika otomatis: ambil dari database chat terbaru
+    try:
+        conn = sqlite3.connect('data/chat.db', check_same_thread=False)
+        c = conn.cursor()
+        c.execute("SELECT symbol FROM chat_sessions")
+        db_tickers = [row[0].upper() for row in c.fetchall() if row[0]]
+        conn.close()
+        # Gabungkan dan unikkan
+        tickers = list(set(tickers + db_tickers))
+    except:
+        pass
+
+    data = []
+    for t in tickers:
+        try:
+            sym = f'{t}.JK' if '.JK' not in t.upper() else t
+            stock = yf.Ticker(sym)
+            # fast_info is efficient
+            info = stock.fast_info
+            price = info.last_price
+            prev_close = info.previous_close
+            change = price - prev_close
+            change_pct = (change / prev_close * 100) if prev_close else 0
+            data.append({
+                'ticker': t.upper(),
+                'price': round(price, 2),
+                'change': round(change, 2),
+                'change_pct': round(change_pct, 2)
+            })
+        except:
+            continue
+    return jsonify(data)
 setup_logging()
 
 # Load all stocks for reference

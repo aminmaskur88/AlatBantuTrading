@@ -25,16 +25,16 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-app);
-            color: var(--text-main); height: 100vh; height: 100dvh; overflow: hidden;
+            color: var(--text-main); height: 100vh; height: 100dvh; overflow: hidden; overflow-x: hidden;
             display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 320px 1fr;
             grid-template-areas: "header header" "sidebar workspace";
             transition: background-color 0.3s, color 0.3s;
         }
         
-        .header-area { grid-area: header; background-color: var(--bg-panel); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; }
-        .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; }
+        .header-area { grid-area: header; background-color: var(--bg-panel); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; padding: 0 20px; z-index: 10; width: 100%; height: 52px; overflow: hidden; }
+        .logo { flex-shrink: 0; flex-shrink: 0; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; }
         .logo .material-icons-round { color: var(--accent); }
-        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .header-actions { flex-shrink: 0; margin-left: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
         .btn-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: 6px; display: flex; align-items: center; }
         .btn-icon:hover { background: var(--item-hover); color: var(--text-main); }
         
@@ -61,7 +61,7 @@
         .signal-sell { background-color: var(--sell); }
         .signal-hold { background-color: var(--hold); color: black; }
         
-        .workspace-area { grid-area: workspace; background-color: var(--bg-workspace); display: flex; flex-direction: column; overflow: hidden; }
+        .workspace-area { grid-area: workspace; background-color: var(--bg-workspace); display: flex; flex-direction: column; overflow: hidden; overflow-x: hidden; }
         .canvas-toolbar { min-height: 48px; background-color: var(--bg-panel); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 16px; z-index: 5; }
         
         .workspace-content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
@@ -77,7 +77,7 @@
         .chat-input-row { display: flex; gap: 8px; }
         
         .news-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-        .news-item { border-radius: 8px; background: var(--bg-app); border: 1px solid var(--border-color); font-size: 13px; transition: all 0.2s; overflow: hidden; }
+        .news-item { border-radius: 8px; background: var(--bg-app); border: 1px solid var(--border-color); font-size: 13px; transition: all 0.2s; overflow: hidden; overflow-x: hidden; }
         .news-item:hover { border-color: var(--accent); background: var(--item-active); }
         .news-item a { color: var(--accent); text-decoration: none; font-weight: 600; display: block; padding: 12px; width: 100%; height: 100%; }
         .news-item a:hover { text-decoration: underline; }
@@ -118,7 +118,7 @@
             box-shadow: 0 12px 28px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow: hidden; overflow-x: hidden;
             margin-bottom: 15px;
             transform-origin: bottom right;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -170,7 +170,7 @@
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; justify-content: center; align-items: center; backdrop-filter: blur(10px);
         }
         .large-chat-content {
-            background: var(--bg-panel); width: 100%; max-width: 900px; height: 90vh; height: 90dvh; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: var(--bg-panel); width: 100%; max-width: 900px; height: 90vh; height: 90dvh; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; overflow-x: hidden; border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
         @media (max-width: 768px) {
             .large-chat-modal { padding: 0; }
@@ -184,6 +184,69 @@
         .app-dialog-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: var(--accent); }
         .app-dialog-message { font-size: 14px; color: var(--text-main); line-height: 1.5; margin-bottom: 24px; }
         .app-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+        /* Ticker Styles */
+        
+        .ticker-container {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            background: var(--bg-app);
+            border-radius: 15px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            margin: 0 15px;
+            position: relative;
+        }
+        .ticker-wrap {
+            width: 100%;
+            white-space: nowrap;
+            display: inline-block;
+        }
+        .ticker-move {
+            display: inline-block;
+            
+            animation: ticker 80s linear infinite; /* Diperlambat dari 40s ke 80s */
+        }
+        .ticker-item {
+            display: inline-block;
+            padding: 0 15px;
+            font-size: 11px; /* Ukuran font dikecilkan dari 13px ke 11px */
+            font-weight: 700;
+        }
+        .ticker-up { color: var(--buy); }
+        .ticker-down { color: var(--sell); }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); } /* Loop mulus di titik tengah */
+        }
+        .real-time-clock { flex-shrink: 0; margin-left: auto;  flex-shrink: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            padding: 4px 10px;
+            background: var(--bg-app);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            min-width: 85px;
+            text-align: center;
+        }
+
+        
+        @media (max-width: 600px) {
+            .ticker-container {
+                margin: 0 8px;
+                max-width: 40%;
+            }
+            .logo span:last-child { display: none; }
+            .real-time-clock { min-width: 70px; font-size: 11px; padding: 2px 5px; }
+        }
+            .logo span:last-child { display: none; } /* Sembunyikan teks logo di layar sangat kecil */
+            .real-time-clock { flex-shrink: 0; margin-left: auto;  flex-shrink: 0; min-width: 75px; font-size: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -193,6 +256,15 @@
             <span class="material-icons-round">show_chart</span>
             <span>AI Stock Analyzer Pro</span>
         </div>
+        
+        <div class="ticker-container">
+            <div class="ticker-wrap">
+                <div class="ticker-move" id="stockTicker">
+                    <span class="ticker-item">Memuat data watchlist...</span>
+                </div>
+            </div>
+        </div>
+        <div class="real-time-clock" id="digitalClock">00:00:00</div>
         <div class="header-actions">
             <button class="btn-icon" id="btnDarkMode" title="Toggle Dark Mode"><span class="material-icons-round">dark_mode</span></button>
             <button class="btn-icon" id="btnFullscreen" title="Fullscreen"><span class="material-icons-round">fullscreen</span></button>
@@ -320,7 +392,7 @@
         </div>
 
         <div class="workspace-content" id="resultsContainer">
-            <div class="panel-card" style="padding: 0; overflow: hidden; flex-shrink: 0; border-radius: 12px; display: flex; flex-direction: column;">
+            <div class="panel-card" style="padding: 0; overflow: hidden; overflow-x: hidden; flex-shrink: 0; border-radius: 12px; display: flex; flex-direction: column;">
                 <div class="panel-header" style="padding: 12px 16px 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 0;"><span class="material-icons-round">stacked_line_chart</span> Grafik Teknikal Real-Time</div>
                 <div id="tradingview_chart" style="height: 450px; width: 100%; background: var(--canvas-bg);"></div>
             </div>
@@ -1050,6 +1122,49 @@
         });
 
         updateRecentAnalysesList();
+    </script>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('digitalClock').textContent = h + ":" + m + ":" + s;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        async function updateTicker() {
+            try {
+                const response = await fetch('/api/watchlist');
+                const data = await response.json();
+                const tickerEl = document.getElementById('stockTicker');
+                
+                if (!data || data.length === 0) {
+                    tickerEl.innerHTML = '<span class="ticker-item">Watchlist kosong</span>';
+                    return;
+                }
+
+                let html = '';
+                // Duplicate data to ensure continuous scrolling
+                const displayData = [...data, ...data]; // Duplikasi 2x untuk seamless loop 
+                displayData.forEach(stock => {
+                    const isUp = stock.change >= 0;
+                    const colorClass = isUp ? 'ticker-up' : 'ticker-down';
+                    const icon = isUp ? '▲' : '▼';
+                    html += '<span class="ticker-item ' + colorClass + '">' + 
+                            stock.ticker + ' ' + stock.price.toLocaleString() + ' ' +
+                            '<span style="font-size: 10px;">' + icon + ' ' + Math.abs(stock.change_pct) + '%</span>' +
+                            '</span>';
+                });
+                tickerEl.innerHTML = html;
+            } catch (e) {
+                console.error("Gagal update ticker:", e);
+            }
+        }
+        setInterval(updateTicker, 60000); // Update setiap 1 menit
+        updateTicker();
     </script>
 </body>
 </html>

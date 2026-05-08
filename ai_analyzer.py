@@ -7,6 +7,11 @@ import re # Add this line
 from bing_search_tool import search_bing
 from yahoo_finance_tool import get_stock_price 
 from utils import move_key_to_bottom
+try:
+    from idx_data_service import IDXDataService
+    idx_service = IDXDataService()
+except ImportError:
+    idx_service = None
 
 # Model fallback list for robustness
 MODELS = [
@@ -336,6 +341,18 @@ async def chat_with_gemini(api_keys, history, user_message):
                 },
                 "required": ["symbol"]
             }
+        },
+        {
+            "name": "get_idx_historical_data_2019_2025",
+            "description": "Mendapatkan data historis saham Indonesia yang sangat lengkap (Open, High, Low, Close, Volume) dari tahun 2019 hingga 2025. Gunakan ini untuk analisis tren jangka panjang (2-5 tahun).",
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "symbol": { "type": "STRING", "description": "Simbol saham (misal: BBCA, TLKM)." },
+                    "period": { "type": "STRING", "description": "Rentang waktu: 1y, 2y, atau 5y.", "enum": ["1y", "2y", "5y"] }
+                },
+                "required": ["symbol"]
+            }
         }
         ]
     }]
@@ -446,6 +463,15 @@ async def chat_with_gemini(api_keys, history, user_message):
                                 from scraper import scrape_idnfinancials
                                 clean_symbol = symbol.replace('.JK', '').replace('.jk', '')
                                 tool_result = scrape_idnfinancials(clean_symbol)
+                            elif function_name == 'get_idx_historical_data_2019_2025':
+                                symbol = args.get('symbol', '').replace('.JK', '').replace('.jk', '')
+                                period = args.get('period', '1y')
+                                yield {'status': f'AI mengakses Database Historis 2019-2025 untuk {symbol}...'}
+                                if idx_service:
+                                    res = idx_service.get_historical_data(symbol, period)
+                                    tool_result = json.dumps(res) if res['success'] else res['error']
+                                else:
+                                    tool_result = 'Fitur database historis local belum terpasang dengan benar.'
                             
                             api_history.append({"role": "model", "parts": [{"functionCall": function_call}]})
                             api_history.append({
