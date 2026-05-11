@@ -397,6 +397,15 @@
                 <div id="tradingview_chart" style="height: 450px; width: 100%; background: var(--canvas-bg);"></div>
             </div>
 
+            
+            <!-- Professional Chart from FinRobot -->
+            <div class="panel-card" id="profChartContainer" style="display:none;">
+                <div class="panel-header"><span class="material-icons-round">trending_up</span> Professional Market Insight (FinRobot Engine)</div>
+                <div style="padding: 15px;">
+                    <img id="profChartImg" src="" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color);">
+                </div>
+            </div>
+            
             <!-- Deep Technical Indicators Section -->
             <div class="panel-card">
                 <div class="panel-header"><span class="material-icons-round">analytics</span> Indikator Teknikal Mendalam</div>
@@ -669,7 +678,21 @@
             priceInterval = setInterval(refreshPriceOnly, 30000);
 
             const resData = data.data;
+            
             const aiRes = data.ai_result;
+            
+            // Show professional chart if available
+            const profChartContainer = document.getElementById('profChartContainer');
+            const profChartImg = document.getElementById('profChartImg');
+            if (profChartContainer && profChartImg) {
+                if (data.charts && data.charts.relative_performance) {
+                    profChartContainer.style.display = 'block';
+                    profChartImg.src = '/' + data.charts.relative_performance + '?t=' + new Date().getTime();
+                    console.log('Showing professional chart:', data.charts.relative_performance);
+                } else {
+                    profChartContainer.style.display = 'none';
+                }
+            }
 
             document.getElementById('resSymbol').textContent = currentSymbol.toUpperCase();
             document.getElementById('resCompany').textContent = resData.company_name;

@@ -7,6 +7,7 @@ import re # Add this line
 from bing_search_tool import search_bing
 from yahoo_finance_tool import get_stock_price 
 from utils import move_key_to_bottom
+from projection_bridge import get_smart_projections
 try:
     from idx_data_service import IDXDataService
     idx_service = IDXDataService()
@@ -21,6 +22,9 @@ MODELS = [
 ]
 
 async def analyze_with_gemini(api_keys, data, history=None):
+        # INTEGRATION: FinRobot Projection Engine
+    projections = get_smart_projections(data["symbol"], data)
+
     if isinstance(api_keys, str):
         api_keys = [api_keys]
         
@@ -54,6 +58,8 @@ async def analyze_with_gemini(api_keys, data, history=None):
     - RSI (14): {data.get('rsi')} ({data.get('rsi_desc')})
     - Moving Average (20): {data.get('ma20')} ({data.get('ma_signal')})
     
+    {projections}
+
     Analisis Teknikal Mendalam:
     - Support 1: {data.get('support_1')} | Support 2: {data.get('support_2')}
     - Resistance 1: {data.get('resistance_1')} | Resistance 2: {data.get('resistance_2')}
@@ -200,6 +206,9 @@ async def summarize_history(api_keys, history_to_summarize):
     return "Percakapan sebelumnya membahas analisis teknikal dan fundamental saham."
 
 async def chat_with_gemini(api_keys, history, user_message):
+        # INTEGRATION: FinRobot Projection Engine
+    projections = get_smart_projections(data["symbol"], data)
+
     if isinstance(api_keys, str): api_keys = [api_keys]
     
     now_ui_str = datetime.datetime.now().strftime("%H:%M")

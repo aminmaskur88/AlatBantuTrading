@@ -1,35 +1,45 @@
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Environments
-.venv/
+.venv
 venv/
 ENV/
 env/
+build/
+dist/
+*.egg-info/
 
-# Data & Cache (Keep the directories, but ignore JSON results)
+# Secret & Keys
+.env
+gemini_key.txt
+config_api_keys
+*.pem
+*.key
+
+# Data & Database
+data/*.db
 data/raw/*.json
 data/clean/*.json
 data/result/*.json
-data/trades.db-journal
+data/historical/*.json
+data/metadata/*.json
+watchlist.json
 
-# Selenium & Browser
-chrome_profile/
+# Static Assets (Generated Charts)
+static/charts/*.png
+static/charts/*.pdf
+static/test_charts/
+
+# Logs
 *.log
+logs/
+
+# Browser/Selenium
+chrome_profile/
 chromedriver
+chromium-browser
 
-# Secrets (IMPORTANT)
-gemini_key.txt
-config.json
-
-# IDE
-.vscode/
-.idea/
-.project
-.pydevproject
-
-# Termux / System
-.gemini/
-tmp/
+# System
+.DS_Store
+Thumbs.db

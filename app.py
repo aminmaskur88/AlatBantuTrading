@@ -11,8 +11,9 @@ from scraper import get_driver, scrape_stock_data, scrape_idnfinancials, get_mac
 from news_scraper import scrape_news, summarize_top_news
 from formatter import clean_data, enrich_data
 from ai_analyzer import analyze_with_gemini, chat_with_gemini
+from chart_bridge import generate_professional_charts
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 
 # --- WATCHLIST REALTIME ENDPOINT ---
 import yfinance as yf
@@ -225,15 +226,18 @@ async def run_full_analysis(symbol):
     
     if not ai_result:
         raise RuntimeError("Gagal mendapatkan hasil AI setelah beberapa kali mencoba")
-        
+
+    # INTEGRATION: FinRobot Charting Engine
+    charts_info = generate_professional_charts(symbol, enriched)
+
     final_result = {
         "timestamp": datetime.datetime.now().isoformat(),
         "data": enriched,
-        "ai_result": ai_result
+        "ai_result": ai_result,
+        "charts": charts_info
     }
     save_json(f"data/result/{symbol}.json", final_result)
     save_analysis_result(symbol, final_result)
-    
     # Setup Chat Context
     now_str = datetime.datetime.now().strftime("%A, %d %B %Y %H:%M:%S")
     profile_info = f"Nama: {company_name}. Ticker: {symbol}."
@@ -619,6 +623,15 @@ async def get_analysis_only(symbol):
             with open(f"data/result/{symbol}.json", "r") as f: res = json.load(f)
         except: return jsonify({"error": "Analysis not found"}), 404
     return jsonify(res)
+
+
+@app.route('/debug/last_analysis/<symbol>')
+def debug_last_analysis(symbol):
+    try:
+        with open(f'data/result/{symbol.upper()}.json', 'r') as f:
+            return jsonify(json.load(f))
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
