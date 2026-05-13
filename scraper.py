@@ -138,6 +138,9 @@ async def get_coingecko_data(symbol):
 
 async def scrape_stock_data(symbol, driver_not_used=None, is_indo=False):
     """Fungsi utama pengambil data (Sekarang 100% Async API)"""
+    if symbol.upper().replace("$", "") == "GENERAL":
+        return {"symbol": symbol, "price": "0", "change": "0", "currency": "IDR", "history": [], "error": "Invalid symbol: GENERAL"}
+
     price, change, history, volumes, fundamental_context = await get_coingecko_data(symbol)
     
     if price is not None:

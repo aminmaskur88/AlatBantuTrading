@@ -8,6 +8,9 @@ async def get_stock_price(symbol):
     Mengambil harga saham terkini menggunakan library yfinance (Python).
     Metode ini lebih stabil daripada scraping atau Node.js library jika sering TMR.
     """
+    if symbol.upper().replace("$", "") == "GENERAL":
+        return {"error": "Invalid symbol: GENERAL", "symbol": symbol}
+
     if not symbol.endswith(".JK") and "." not in symbol:
         symbol = f"{symbol}.JK"
     
@@ -39,6 +42,9 @@ async def get_stock_price(symbol):
 
 async def get_historical_stock_data(symbol, range_val="1y"):
     """Mengambil data historis menggunakan yfinance."""
+    if symbol.upper().replace("$", "") == "GENERAL":
+        return {"error": "Invalid symbol: GENERAL", "symbol": symbol}
+
     if not symbol.endswith(".JK") and "." not in symbol:
         symbol = f"{symbol}.JK"
         
@@ -73,6 +79,9 @@ async def get_historical_stock_data(symbol, range_val="1y"):
 
 async def get_fundamental_data(symbol):
     """Mengambil data fundamental menggunakan yfinance."""
+    if symbol.upper().replace("$", "") == "GENERAL":
+        return {"error": "Invalid symbol: GENERAL", "symbol": symbol}
+
     if not symbol.endswith(".JK") and "." not in symbol:
         symbol = f"{symbol}.JK"
         

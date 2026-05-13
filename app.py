@@ -30,7 +30,7 @@ def get_watchlist_realtime():
         conn = sqlite3.connect('data/chat.db', check_same_thread=False)
         c = conn.cursor()
         c.execute("SELECT symbol FROM chat_sessions")
-        db_tickers = [row[0].upper() for row in c.fetchall() if row[0]]
+        db_tickers = [row[0].upper() for row in c.fetchall() if row[0] and row[0].upper() != "GENERAL"]
         conn.close()
         # Gabungkan dan unikkan
         tickers = list(set(tickers + db_tickers))
@@ -326,7 +326,7 @@ async def analyze():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/chat", methods=["POST"])
-async def chat():
+def chat():
     data = request.json
     symbol = data.get("symbol", "").strip().upper() or "GENERAL"
     message = data.get("message", "").strip()
@@ -334,7 +334,10 @@ async def chat():
     if not message:
         return jsonify({"error": "Pesan tidak boleh kosong"}), 400
 
-    def generate_chat_stream():
+    def generate():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
         async def stream():
             history = client_history if client_history else get_chat_history(symbol)
             if not history:
@@ -385,20 +388,18 @@ async def chat():
             except Exception as e:
                 logging.error(f"Error di backend chat stream: {str(e)}")
                 yield f"data: {json.dumps({'status': f'Error: {str(e)}', 'error': str(e), 'done': True})}\n\n"
-        
-        loop = asyncio.new_event_loop()
+
         gen = stream()
         try:
             while True:
                 try:
-                    val = loop.run_until_complete(gen.__anext__())
-                    yield val
+                    yield loop.run_until_complete(gen.__anext__())
                 except StopAsyncIteration:
                     break
         finally:
             loop.close()
 
-    return Response(stream_with_context(generate_chat_stream()), mimetype='text/event-stream')
+    return Response(generate(), mimetype='text/event-stream')
 
 @app.route("/api/chat/sync", methods=["POST"])
 async def sync_chat():
@@ -529,12 +530,15 @@ async def refresh_news():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/more_news", methods=["POST"])
-async def more_news():
+def more_news():
     data = request.json
     symbol = data.get("symbol", "").strip().upper()
     if not symbol:
         return jsonify({"error": "Kode saham tidak boleh kosong"}), 400
     def generate():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
         async def stream():
             api_keys = get_api_keys()
             if not api_keys:
@@ -598,14 +602,15 @@ async def more_news():
                 yield f"data: {json.dumps({'status': 'Selesai!', 'ai_reply': display_reply, 'ai_result': ai_result, 'done': True})}\n\n"
             except Exception as e:
                 yield f"data: {json.dumps({'error': str(e)})}\n\n"
-        loop = asyncio.new_event_loop()
+        
         gen = stream()
         try:
             while True:
                 try: yield loop.run_until_complete(gen.__anext__())
                 except StopAsyncIteration: break
         finally: loop.close()
-    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+    
+    return Response(generate(), mimetype='text/event-stream')
 
 @app.route("/api/price/<symbol>")
 async def get_quick_price(symbol):
