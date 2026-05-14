@@ -206,9 +206,6 @@ async def summarize_history(api_keys, history_to_summarize):
     return "Percakapan sebelumnya membahas analisis teknikal dan fundamental saham."
 
 async def chat_with_gemini(api_keys, history, user_message):
-        # INTEGRATION: FinRobot Projection Engine
-    projections = get_smart_projections(data["symbol"], data)
-
     if isinstance(api_keys, str): api_keys = [api_keys]
     
     now_ui_str = datetime.datetime.now().strftime("%H:%M")
