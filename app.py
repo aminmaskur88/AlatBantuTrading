@@ -186,7 +186,7 @@ async def run_full_analysis(symbol):
     raw_data, news, macro = await asyncio.gather(raw_data_task, news_task, macro_task)
     
     # NEW: Fetch Deep Fundamental Data for Indo Stocks
-    idn_data_task = asyncio.to_thread(scrape_idnfinancials, symbol) if is_indo else asyncio.sleep(0, result="")
+    idn_data_task = scrape_idnfinancials(symbol) if is_indo else asyncio.sleep(0, result="")
     
     # NEW: Deep Reading - Summarize top news contents
     deep_news_task = summarize_top_news(news)
@@ -209,6 +209,13 @@ async def run_full_analysis(symbol):
     cleaned = clean_data(raw_data)
     save_json(f"data/clean/{symbol}.json", cleaned)
     enriched = enrich_data(cleaned)
+    
+    # VALIDATION: Enforce Live Data Grounding
+    # If we don't have a valid price, do not let AI process the request
+    if not enriched.get('price') or str(enriched.get('price')) == "0":
+        logging.error(f"Integritas data gagal untuk {symbol}: Harga live tidak ditemukan.")
+        raise RuntimeError(f"Gagal mendapatkan data harga live terbaru untuk {symbol}. Sistem menghentikan analisis untuk mencegah halusinasi AI.")
+
     enriched["macro_data"] = macro 
     enriched["foreign_flow"] = foreign_data
     
@@ -252,7 +259,7 @@ async def run_full_analysis(symbol):
         f"Fibonacci (90D): 61.8%: {enriched.get('fib_618')}, 50%: {enriched.get('fib_500')}, 38.2%: {enriched.get('fib_382')}.\n"
         f"Fundamental/Stats: High 52W: {enriched.get('stats', {}).get('high_52')}, Low 52W: {enriched.get('stats', {}).get('low_52')}, Cap: {enriched.get('stats', {}).get('market_cap')}.\n"
         f"Berita Terbaru: {json.dumps(enriched.get('news', []))}.\n"
-        "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal dan fundamental presisi di atas. JANGAN katakan kamu tidak bisa atau tidak punya info hari ini, karena data di atas adalah data TERBARU (real-time)."
+        "Tugasmu adalah menjadi analis saham profesional yang dilarang keras menggunakan pengetahuan internal. Gunakan data teknikal dan fundamental presisi di atas. Berikan analisis, opini, dan saran strategi secara langsung tanpa memberikan disclaimer atau penafian mengenai risiko investasi, karena pengguna sudah memahaminya. Jika data tidak ada, katakan Anda tidak tahu. Selalu cantumkan sumber data (Grounding) dalam jawaban Anda."
     )
 
     existing_history = get_chat_history(symbol)
@@ -344,8 +351,8 @@ def chat():
                 if symbol == "GENERAL":
                     now_str = datetime.datetime.now().strftime("%A, %d %B %Y %H:%M:%S")
                     history = [
-                        {"role": "user", "parts": [{"text": f"WAKTU SEKARANG: {now_str}\nKamu adalah asisten AI serba bisa yang terintegrasi dengan mesin pencari. Kamu bisa membantu menjawab pertanyaan apa saja, melakukan riset di internet, dan memberikan analisis. Gunakan Bahasa Indonesia."}]},
-                        {"role": "model", "parts": [{"text": "Halo! Saya asisten AI Anda. Ada yang bisa saya bantu hari ini? Saya bisa mencari informasi apa pun di internet untuk Anda."}]}
+                        {"role": "user", "parts": [{"text": f"WAKTU SEKARANG: {now_str}\nKamu adalah asisten AI serba bisa yang terintegrasi dengan mesin pencari. Kamu bisa membantu menjawab pertanyaan apa saja, melakukan riset di internet, dan memberikan analisis secara langsung tanpa disclaimer. Gunakan Bahasa Indonesia."}]},
+                        {"role": "model", "parts": [{"text": "Halo! Saya asisten AI Anda. Ada yang bisa saya bantu hari ini? Saya bisa mencari informasi apa pun di internet untuk Anda dan memberikan analisis tajam secara langsung."}]}
                     ]
                     save_chat_history("GENERAL", history)
                 else:
@@ -411,13 +418,18 @@ async def sync_chat():
         now_str = datetime.datetime.now().strftime("%A, %d %B %Y %H:%M:%S")
         now_time = datetime.datetime.now().strftime("%H:%M")
         save_chat_history("GENERAL", [
-            {"role": "user", "time": now_time, "parts": [{"text": f"WAKTU SEKARANG: {now_str}\nKamu adalah asisten AI serba bisa yang terintegrasi dengan mesin pencari. Kamu bisa membantu menjawab pertanyaan apa saja, melakukan riset di internet, dan memberikan analisis. Gunakan Bahasa Indonesia."}]},
-            {"role": "model", "time": now_time, "parts": [{"text": "Halo! Saya asisten AI Anda. Ada yang bisa saya bantu hari ini? Saya bisa mencari informasi apa pun di internet untuk Anda."}]}
+            {"role": "user", "time": now_time, "parts": [{"text": f"WAKTU SEKARANG: {now_str}\nKamu adalah asisten AI serba bisa yang terintegrasi dengan mesin pencari. Kamu bisa membantu menjawab pertanyaan apa saja, melakukan riset di internet, dan memberikan analisis secara langsung tanpa disclaimer. Gunakan Bahasa Indonesia."}]},
+            {"role": "model", "time": now_time, "parts": [{"text": "Halo! Saya asisten AI Anda. Ada yang bisa saya bantu hari ini? Saya bisa mencari informasi apa pun di internet untuk Anda dan memberikan analisis tajam secara langsung."}]}
         ])
         return jsonify({"status": "ok"})
     company_name = all_stocks.get(symbol, "Perusahaan Tidak Diketahui")
     is_indo = symbol in all_stocks
     fresh_data = await scrape_stock_data(symbol, is_indo=is_indo)
+    
+    # VALIDATION: Enforce Live Data Grounding
+    if not fresh_data or not fresh_data.get("price") or str(fresh_data.get("price")) == "0":
+        return jsonify({"error": f"Gagal mendapatkan data live terbaru untuk {symbol}. Sinkronisasi dibatalkan untuk mencegah halusinasi AI."}), 500
+
     try:
         with open(f"data/clean/{symbol}.json", "r") as f:
             enriched = json.load(f)
@@ -437,7 +449,7 @@ async def sync_chat():
         f"Indikator Teknikal: Support1: {enriched.get('support_1')}, Resistance1: {enriched.get('resistance_1')}, BB Upper: {enriched.get('bb_upper')}, BB Lower: {enriched.get('bb_lower')}, MACD: {enriched.get('macd')}.\n"
         f"Fibonacci (90D): 61.8%: {enriched.get('fib_618')}, 50%: {enriched.get('fib_500')}, 38.2%: {enriched.get('fib_382')}.\n"
         f"Fundamental/Stats: High 52W: {enriched.get('stats', {}).get('high_52')}, Low 52W: {enriched.get('stats', {}).get('low_52')}, Cap: {enriched.get('stats', {}).get('market_cap')}.\n"
-        "Tugasmu adalah menjadi analis saham profesional. Gunakan data teknikal dan fundamental presisi di atas. JANGAN katakan kamu tidak punya info hari ini."
+        "Tugasmu adalah menjadi analis saham profesional yang dilarang keras menggunakan pengetahuan internal. Gunakan data teknikal dan fundamental presisi di atas. Berikan analisis, opini, dan saran strategi secara langsung tanpa memberikan disclaimer atau penafian mengenai risiko investasi, karena pengguna sudah memahaminya. Jika data tidak ada, katakan Anda tidak tahu. Selalu cantumkan sumber data (Grounding) dalam jawaban Anda."
     )
     now_time = datetime.datetime.now().strftime("%H:%M")
     save_chat_history(symbol, [

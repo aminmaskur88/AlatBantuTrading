@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import logging
 
 def get_holdings(symbol):
     db_path = 'data/trades.db'
@@ -215,7 +216,7 @@ def clean_data(raw_data):
     context = raw_data.get('fundamental_context', '')
     if context:
         import re
-        ratios = {}
+        ratios = clean.get('ratios', {})
         # Simple patterns for ROE, PER, PBV, DER
         patterns = {
             "roe": r"ROE\s*[:=]?\s*([\d\.,]+)%?",
@@ -228,6 +229,18 @@ def clean_data(raw_data):
             if match:
                 ratios[key] = match.group(1)
         clean['ratios'] = ratios
+        
+        # NEW: Extract Market Cap from IDNFinancials text or fallback search
+        mc_pattern = r"(?:Kapitalisasi Pasar|Market Cap)\s*[:=]?\s*(?:IDR)?\s*([\d\.,]+)\s*(Juta|Miliar|Triliun|Jt|M|T|Billion|Million|Trillion)"
+        mc_match = re.search(mc_pattern, context, re.IGNORECASE)
+        if mc_match:
+            val = mc_match.group(1).strip()
+            unit = mc_match.group(2).strip()
+            if 'stats' not in clean: clean['stats'] = {}
+            # Update market_cap if it was null or empty
+            if not clean['stats'].get('market_cap'):
+                clean['stats']['market_cap'] = f"IDR {val} {unit}"
+                logging.info(f"Extracted Market Cap for {clean.get('symbol')}: {clean['stats']['market_cap']}")
 
     return clean
 

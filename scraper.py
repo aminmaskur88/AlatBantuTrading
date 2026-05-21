@@ -366,15 +366,17 @@ def get_driver():
         logging.error(f"Gagal inisialisasi driver Selenium (Fallback Aktif): {e}")
         return ScraperDriver(None)
 
-def scrape_idnfinancials(symbol):
+async def scrape_idnfinancials(symbol):
     """
     Scrape company profile and financial data from IDNFinancials using Selenium and BeautifulSoup.
     Improved to handle asynchronous loading and added a search fallback.
     """
     clean_symbol = symbol.replace('.JK', '').replace('.jk', '').upper()
     try:
-        driver = get_driver()
-        driver.get(f"https://www.idnfinancials.com/id/{clean_symbol}")
+        # Selenium part still needs to be in a thread if it's blocking, 
+        # but for simplicity we keep it here and just await the fallback
+        driver = await asyncio.to_thread(get_driver)
+        await asyncio.to_thread(driver.get, f"https://www.idnfinancials.com/id/{clean_symbol}")
         
         # Wait for the specific financial summary or profile to load
         import time
@@ -385,16 +387,16 @@ def scrape_idnfinancials(symbol):
         # Increase wait time and look for specific indicators of content
         try:
             # Wait for any table or specific ID to appear
-            WebDriverWait(driver.driver, 15).until(
+            await asyncio.to_thread(lambda: WebDriverWait(driver.driver, 15).until(
                 EC.presence_of_element_located((By.ID, "tab-fin-ove"))
-            )
+            ))
             # Give a bit more time for AJAX to populate tables
-            time.sleep(5)
+            await asyncio.sleep(5)
         except:
             logging.warning(f"Timeout waiting for IDNFinancials content for {clean_symbol}")
         
-        html = driver.page_source
-        driver.quit()
+        html = await asyncio.to_thread(lambda: driver.page_source)
+        await asyncio.to_thread(driver.quit)
         
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(html, 'html.parser')
@@ -429,8 +431,8 @@ def scrape_idnfinancials(symbol):
     try:
         logging.info(f"Using Search Fallback for {clean_symbol} fundamental ratios...")
         from bing_search_tool import search_bing
-        search_query = f"rasio keuangan {clean_symbol} ROE PER PBV DER idnfinancials stockbit"
-        search_results = asyncio.run(search_bing(search_query))
+        search_query = f"rasio keuangan {clean_symbol} ROE PER PBV DER market cap idnfinancials stockbit"
+        search_results = await search_bing(search_query)
         return f"DATA FUNDAMENTAL DARI PENCARIAN (Fallback):\n{search_results}"
     except Exception as e:
         logging.error(f"Search fallback failed: {e}")

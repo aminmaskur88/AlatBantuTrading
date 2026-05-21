@@ -146,9 +146,38 @@ class IDXDataService:
             if csv_text:
                 data = self.parse_csv_data(csv_text, ticker)
                 needs_save = True
+            else:
+                # NEW FALLBACK: If GitHub fails, try basic Yahoo Finance fetch
+                logging.info(f"GitHub data not found for {ticker}, trying Yahoo Finance fallback...")
+                try:
+                    stock = yf.Ticker(f"{ticker}.JK")
+                    # Try to get 1 year of data at least
+                    hist = stock.history(period="1y")
+                    if not hist.empty:
+                         data_points = []
+                         for date, row in hist.iterrows():
+                             data_points.append({
+                                 "date": date.strftime('%Y-%m-%d'),
+                                 "close": float(row['Close']),
+                                 "open": float(row['Open']),
+                                 "high": float(row['High']),
+                                 "low": float(row['Low']),
+                                 "volume": float(row['Volume'])
+                             })
+                         data = {
+                             "ticker": ticker,
+                             "startDate": data_points[0]["date"],
+                             "endDate": data_points[-1]["date"],
+                             "totalPoints": len(data_points),
+                             "dataPoints": data_points,
+                             "source": "Yahoo Finance Fallback"
+                         }
+                         needs_save = True
+                except Exception as e:
+                    logging.error(f"Yahoo fallback failed for {ticker}: {e}")
         
         if not data:
-            return {"success": False, "error": f"Ticker {ticker} tidak ditemukan."}
+            return {"success": False, "error": f"Ticker {ticker} tidak ditemukan di GitHub maupun Yahoo Finance."}
 
         # Update data sampai hari ini
         mtime = datetime.fromtimestamp(os.path.getmtime(cache_path)) if os.path.exists(cache_path) else datetime.min

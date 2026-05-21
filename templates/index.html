@@ -453,6 +453,17 @@
                     </div>
                     <div id="resAnalysis" style="font-size: 13px; line-height: 1.6; white-space: pre-wrap; color: var(--text-main);"></div>
                     <div id="resReason" style="font-size: 12px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color); color: var(--text-muted); font-style: italic;"></div>
+                    
+                    <!-- Internal Agent Trail (Expandable) -->
+                    <div id="agentTrailContainer" style="margin-top: 20px; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+                        <button onclick="toggleAgentTrail()" style="width: 100%; padding: 10px; background: var(--bg-panel); border: none; color: var(--accent); font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                            <span><span class="material-icons-round" style="font-size: 14px; vertical-align: middle; margin-right: 5px;">history_edu</span> LIHAT LOG MULTI-AGENT (INTERNAL)</span>
+                            <span id="trailIcon" class="material-icons-round">expand_more</span>
+                        </button>
+                        <div id="agentTrailContent" style="display: none; padding: 15px; background: #1a1a1a; font-family: monospace; font-size: 11px; max-height: 400px; overflow-y: auto;">
+                            <!-- Agent logs will be injected here -->
+                        </div>
+                    </div>
                 </div>
 
                 <div class="panel-card">
@@ -748,6 +759,22 @@
             
             document.getElementById('resAnalysis').textContent = aiRes.analysis;
             document.getElementById('resReason').innerHTML = `<b>Alasan AI:</b> ${aiRes.reason}`;
+
+            // Render Multi-Agent Trail
+            const trailContent = document.getElementById('agentTrailContent');
+            if (aiRes.agent_trail && trailContent) {
+                let trailHtml = '';
+                aiRes.agent_trail.forEach(step => {
+                    const agentColor = step.agent.includes('Executor') ? '#4285f4' : (step.agent.includes('Validator') ? '#ea4335' : '#34a853');
+                    trailHtml += `<div style="margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 8px;">
+                        <span style="color: ${agentColor}; font-weight: bold;">[${step.agent}${step.iteration ? ' - Iterasi ' + step.iteration : ''}]</span><br>
+                        <pre style="white-space: pre-wrap; margin-top: 5px; color: #ccc;">${JSON.stringify(step.output, null, 2)}</pre>
+                    </div>`;
+                });
+                trailContent.innerHTML = trailHtml;
+            } else if (trailContent) {
+                trailContent.innerHTML = '<div style="color: #666;">Data log multi-agent tidak tersedia untuk analisis ini.</div>';
+            }
 
             if (data.timestamp) {
                 const ts = new Date(data.timestamp);
@@ -1145,6 +1172,18 @@
         });
 
         updateRecentAnalysesList();
+
+        function toggleAgentTrail() {
+            const content = document.getElementById('agentTrailContent');
+            const icon = document.getElementById('trailIcon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.textContent = 'expand_less';
+            } else {
+                content.style.display = 'none';
+                icon.textContent = 'expand_more';
+            }
+        }
     </script>
 
     <script>
